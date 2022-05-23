@@ -334,24 +334,7 @@ add-zsh-hook preexec __ZSHRC__preexec_insert
 
 
 # [ PROMPT SETUP ]------------------------------------------------------------------------------- #
-# Variables for customizing the prompt later.
-# For the main prompt.
-__ZSHRC__PS1_before_user_host='%B%F{%(!.red.green)}'
-__ZSHRC__PS1_before_path='%f%b:%B%F{blue}'
-__ZSHRC__PS1_after_path='%f%b%# '
-
-# For the overwrite indicator in RPROMPT. (See the keymap section above.)
-__ZSHRC__overwrite_indicator="  %K{blue}%B%F{white} over %f%b%k"
-
-# For the jobs indicator in RPROMPT.
-__ZSHRC__jobs_prompt_prefix='%K{magenta}%B%F{white} '
-__ZSHRC__jobs_prompt_suffix=' %f%b%k'
-
-# For the error code in RPROMPT.
-__ZSHRC__error_prefix='%K{red}%B%F{white} '
-__ZSHRC__error_suffix=' %f%b%k'
-
-# A simple, but effective prompt ---------------------------------------------------------------- #
+# A simple, but effective prompt
 PS1='%b%k%f'                                        # Reset color to default.
 [[ $LANG = *.UTF-8 ]] && PS1+=$'%{\e%G%}'           # Select UTF-8 character set
 
@@ -508,14 +491,24 @@ add-zsh-hook preexec __ZSHRC__preexec_window_title
   add-zsh-hook precmd gitstatus_prompt_update
 }
 
-# Fancy prompt ---------------------------------------------------------------------------------- #
+# Simple prompt and fancy prompt ---------------------------------------------------------------- #
+
+__ZSHRC__simple_prompt() {
+  __ZSHRC__PS1_before_user_host='%B%F{%(!.red.green)}'
+  __ZSHRC__PS1_before_path='%f%b:%B%F{blue}'
+  __ZSHRC__PS1_after_path='%f%b%# '
+  __ZSHRC__overwrite_indicator="  %K{blue}%B%F{white} over %f%b%k"
+  __ZSHRC__jobs_prompt_prefix='%K{magenta}%B%F{white} '
+  __ZSHRC__jobs_prompt_suffix=' %f%b%k'
+  __ZSHRC__error_prefix='%K{red}%B%F{white} '
+  __ZSHRC__error_suffix=' %f%b%k'
+}
+
 # Completely unnecessary, but I like it.
-# The fancy prompt will be used if the terminal is a virtual TTY, X11 is available, we're using
-# a UTF-8 locale, and we're not in a SSH session, the terminal supports 8-bit colors.
 # This prompt requires Nerd Fonts (https://www.nerdfonts.com/).
-if [[ $TTY = /dev/pts/* && -n $DISPLAY && $LANG = *.UTF-8 ]] && ! ((__ZSHRC__ssh_session)) \
-    && ((__ZSHRC__color8bit)) {
-  ps1usrcolor='%(!.#b24742.#47a730)'
+__ZSHRC__fancy_prompt() {
+  # For the main prompt.
+  local ps1usrcolor='%(!.#b24742.#47a730)'
   __ZSHRC__PS1_before_user_host="%K{$ps1usrcolor}%B%F{white} "
   __ZSHRC__PS1_before_path="%b%F{$ps1usrcolor}%K{#547bb5}"$'\uE0B4'" %B%F{white}"
   __ZSHRC__PS1_after_path="%b%F{#547bb5}%K{$ps1usrcolor}"$'\uE0B4'"%k%F{$ps1usrcolor}"$'\uE0B4'"%f "
@@ -524,8 +517,18 @@ if [[ $TTY = /dev/pts/* && -n $DISPLAY && $LANG = *.UTF-8 ]] && ! ((__ZSHRC__ssh
   __ZSHRC__jobs_prompt_suffix=$'%k%b%F{magenta}\uE0B4%f'
   __ZSHRC__error_prefix=$'%F{red}\uE0B6%K{red}%B%F{white}'
   __ZSHRC__error_suffix=$'%k%b%F{red}\uE0B4%f'
-  unset ps1usrcolor
 }
+
+# Select the prompt.
+# The fancy prompt will be used if the terminal is a virtual TTY, X11 is available, we're using
+# a UTF-8 locale, and we're not in a SSH session, the terminal supports 8-bit colors, otherwise
+# the simple prompt will be used.
+[[ $TTY = /dev/pts/* ]] \
+  && [[ -n $DISPLAY ]] \
+  && [[ $LANG = *.UTF-8 ]] \
+  && ! ((__ZSHRC__ssh_session)) \
+  && ((__ZSHRC__color8bit)) \
+  && __ZSHRC__fancy_prompt || __ZSHRC__simple_prompt
 # ----------------------------------------------------------------------------------------------- #
 
 
