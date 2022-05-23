@@ -407,14 +407,14 @@ __ZSHRC__print_window_title() {
   print -n '\007'                                   # End the title escape sequence.
 }
 
-__ZSHRC__precmd_window_title() {
-  __ZSHRC__print_window_title zsh
+__ZSHRC__precmd_window_title() {                    # After the command is run, we're back in zsh,
+  __ZSHRC__print_window_title zsh                   # so let the window name reflect that.
 }
 
 __ZSHRC__preexec_window_title() {
   local cmd=$2
-  [[ ${#cmd} -gt 32 ]] && cmd="${cmd[1,31]}…"
-  __ZSHRC__print_window_title ${cmd}
+  [[ ${#cmd} -gt 32 ]] && cmd="${cmd[1,31]}…"       # Truncate the command line if it's too long.
+  __ZSHRC__print_window_title ${cmd}                # Show the command name in the window title.
 }
 
 add-zsh-hook precmd __ZSHRC__precmd_window_title
@@ -612,16 +612,12 @@ eval $(
 #   --time-style=long-iso: show times in long ISO format (e.g. 2017-01-01 12:00)
 alias ls='command ls -h --color=auto --indicator-style=slash --time-style=long-iso'
 
-# Add colors to grep and friends.
-for grep ({,e,f}grep bzgrep {,l,x}z{,e,f}grep) {
+for grep ({,e,f}grep bzgrep {,l,x}z{,e,f}grep) {    # Add colors to grep and friends.
   [[ -n ${commands[$grep]} ]] && alias "$grep=command $grep --color=auto"
 }
 
-# Add colors to diff command.
-alias diff='command diff --color=auto'
-
-# Add colors to ip command.
-alias ip='command ip --color=auto'
+alias diff='command diff --color=auto'              # Add colors to diff command.
+alias ip='command ip --color=auto'                  # Add colors to ip command.
 # ----------------------------------------------------------------------------------------------- #
 
 
