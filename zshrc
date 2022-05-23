@@ -245,11 +245,13 @@ __ZSHRC__keys=(
 __ZSHRC__bindkeys() {
   local keys=$1
   local widget=$2
-  if [[ -n ${__ZSHRC__keys[$keys]} ]] {
-    keys=${__ZSHRC__keys[$keys]}                    # Get the key sequences from __ZSHRC__keys.
-  }
+  local IFS=' '                                     # Split keys by spaces.
   for key (${=keys}) {                              # Loop through the key sequences.
-    bindkey $key $widget                            # Bind the key to the widget.
+    if [[ -n ${__ZSHRC__keys[$key]} ]] {            # If its a key from the __ZSHRC__keys array,
+      __ZSHRC__bindkeys "${__ZSHRC__keys[$key]}" $widget # Recurse.
+    } else {
+      bindkey $key $widget                          # Bind the key to the widget.
+    }
   }
 }
 
