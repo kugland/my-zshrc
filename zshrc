@@ -303,17 +303,23 @@ __ZSHRC__cursorshape_overwrite() {
   }
 }
 
+# Update the overwrite mode indicator.
+__ZSHRC__indicator_overwrite() {
+  ((__ZSHRC__overwrite_state)) \
+    && __ZSHRC__overwrite_prompt=$__ZSHRC__overwrite_indicator \
+    || __ZSHRC__overwrite_prompt=''
+}
+
 # Handler for the 'Insert' key.
 __ZSHRC__keyhandler_overwrite() {
   zle overwrite-mode                                # Toggle overwrite mode.
   [[ $ZLE_STATE = *insert* ]]
-  __ZSHRC__overwrite_state=$?
-  __ZSHRC__cursorshape_overwrite
-  # Set the indicator.
-  ((__ZSHRC__overwrite_state)) \
-    && __ZSHRC__overwrite_prompt=$__ZSHRC__overwrite_indicator \
-    || __ZSHRC__overwrite_prompt=''
-  [[ $CONTEXT = start ]] && zle reset-prompt
+  __ZSHRC__overwrite_state=$?                       # Save the overwrite mode state.
+  __ZSHRC__cursorshape_overwrite                    # Update the cursor shape.
+  __ZSHRC__indicator_overwrite                      # Update the indicator.
+  # If we're not in the start context, we can't reset the prompt, as it -- for some reasom --
+  # will mess up the RPROMPT.
+  [[ $CONTEXT = start ]] && zle reset-prompt        # Reset the prompt.
 }
 zle -N __ZSHRC__keyhandler_overwrite
 __ZSHRC__bindkeys Insert __ZSHRC__keyhandler_overwrite
@@ -492,6 +498,7 @@ __ZSHRC__simple_prompt() {
   __ZSHRC__jobs_prompt_suffix=' %f%b%k'
   __ZSHRC__error_prefix='%K{red}%B%F{white} '
   __ZSHRC__error_suffix=' %f%b%k'
+  __ZSHRC__indicator_overwrite                      # # Update the overwrite indicator if needed.
 }
 
 # Completely unnecessary, but I like it.
@@ -507,6 +514,7 @@ __ZSHRC__fancy_prompt() {
   __ZSHRC__jobs_prompt_suffix=$'%k%b%F{magenta}\uE0B4%f'
   __ZSHRC__error_prefix=$'%F{red}\uE0B6%K{red}%B%F{white}'
   __ZSHRC__error_suffix=$'%k%b%F{red}\uE0B4%f'
+  __ZSHRC__indicator_overwrite                      # # Update the overwrite indicator if needed.
 }
 
 # Select the prompt.
