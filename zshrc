@@ -91,6 +91,7 @@ autoload -Uz add-zle-hook-widget add-zsh-hook compinit is-at-least
 # [ SET SHELL OPTIONS ]-------------------------------------------------------------------------- #
 IFS=$' \t\n\000'                                    # Set IFS to space, tab, newline and null.
 setopt extended_glob                                # Enable Zsh extended globbing.
+setopt interactive_comments                         # Enable comments in interactive shells.
 setopt no_beep                                      # Disable beep on errors.
 setopt no_correct                                   # Damn you, autocorrect!
 [[ $TERM != linux ]] && setopt combining_chars      # Assume the terminal supports combining chars.
