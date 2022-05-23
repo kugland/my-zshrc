@@ -296,7 +296,7 @@ __ZSHRC__overwrite_state=0                          # Overwrite mode state, 0 = 
 __ZSHRC__overwrite_prompt=''                        # Overwrite mode indicator for RPROMPT
 
 # Sets cursor shape according to insert/overwrite state and update the indicator.
-__ZSHRC__cursorshape_and_indicator_insert() {
+__ZSHRC__cursorshape_overwrite() {
   if [[ TERM != linux ]] {
     # Set the cursor shape (| for insert, _ for overwrite).
     print -n '\e]50;CursorShape='$((__ZSHRC__overwrite_state + 1))'\007'
@@ -304,32 +304,32 @@ __ZSHRC__cursorshape_and_indicator_insert() {
 }
 
 # Handler for the 'Insert' key.
-__ZSHRC__keyhandler_insert() {
+__ZSHRC__keyhandler_overwrite() {
   zle overwrite-mode                                # Toggle overwrite mode.
   [[ $ZLE_STATE = *insert* ]]
   __ZSHRC__overwrite_state=$?
-  __ZSHRC__cursorshape_and_indicator_insert
+  __ZSHRC__cursorshape_overwrite
   # Set the indicator.
   ((__ZSHRC__overwrite_state)) \
     && __ZSHRC__overwrite_prompt=$__ZSHRC__overwrite_indicator \
     || __ZSHRC__overwrite_prompt=''
   [[ $CONTEXT = start ]] && zle reset-prompt
 }
-zle -N __ZSHRC__keyhandler_insert
-__ZSHRC__bindkeys Insert __ZSHRC__keyhandler_insert
+zle -N __ZSHRC__keyhandler_overwrite
+__ZSHRC__bindkeys Insert __ZSHRC__keyhandler_overwrite
 
-__ZSHRC__zlelineinit_insert() {
+__ZSHRC__zlelineinit_overwrite() {
   # Since zle's overwrite mode is not persistent, we need to restore the state on each line.
   ((__ZSHRC__overwrite_state)) && zle overwrite-mode
-  __ZSHRC__cursorshape_and_indicator_insert
+  __ZSHRC__cursorshape_overwrite
 }
 
 # Always set to insert cursor before running commands.
-__ZSHRC__preexec_insert() {
+__ZSHRC__preexec_overwrite() {
   [[ "$TERM" != linux ]] && print -n '\e]50;CursorShape=1\007'
 }
-add-zle-hook-widget line-init __ZSHRC__zlelineinit_insert
-add-zsh-hook preexec __ZSHRC__preexec_insert
+add-zle-hook-widget line-init __ZSHRC__zlelineinit_overwrite
+add-zsh-hook preexec __ZSHRC__preexec_overwrite
 # ----------------------------------------------------------------------------------------------- #
 
 
