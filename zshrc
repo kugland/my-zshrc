@@ -337,9 +337,7 @@ add-zsh-hook preexec __ZSHRC__preexec_insert
 # A simple, but effective prompt
 PS1='%b%k%f'                                        # Reset color to default.
 [[ $LANG = *.UTF-8 ]] && PS1+=$'%{\e%%G%}'          # Select UTF-8 character set
-
 ((__ZSHRC__ssh_session)) && PS1+='%B%F{black}[%f%bssh%B%F{black}]%f%b ' # Show we're under ssh.
-
 PS1+='${__ZSHRC__PS1_before_user_host}%(!..%n@)%m'  # user@hostname / hostname
 PS1+='${__ZSHRC__PS1_before_path}%~'                # :path
 PS1+='${__ZSHRC__PS1_after_path}'                   # % / #
