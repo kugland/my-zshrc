@@ -619,7 +619,7 @@ for plugin (
   /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh
 ) { 2>/dev/null source $plugin }
 
-# If history-substring-search is available, bind Ctrl+UpArrow and Ctrl+DownArrow to it.
+# If history-substring-search is available, bind Ctrl+PageUp and Ctrl+PageDown to it.
 ((${+functions[history-substring-search-up]})) \
   && __ZSHRC__bindkeys CtrlPageUp history-substring-search-up
 ((${+functions[history-substring-search-down]})) \
