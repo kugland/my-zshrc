@@ -492,7 +492,8 @@ add-zsh-hook preexec __ZSHRC__preexec_window_title
 }
 
 # Simple prompt and fancy prompt ---------------------------------------------------------------- #
-
+# A simple prompt that will work nicely in a console with limited charset and only 16 colors,
+# such as the Linux console.
 __ZSHRC__simple_prompt() {
   __ZSHRC__PS1_before_user_host='%B%F{%(!.red.green)}'
   __ZSHRC__PS1_before_path='%f%b:%B%F{blue}'
