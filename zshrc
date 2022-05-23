@@ -344,11 +344,15 @@ PS1+='${__ZSHRC__PS1_before_user_host}%(!..%n@)%m'  # user@hostname / hostname
 PS1+='${__ZSHRC__PS1_before_path}%~'                # :path
 PS1+='${__ZSHRC__PS1_after_path}'                   # % / #
 
-# RPROMPT will contain the error code for the last command and the git prompt.
+# RPROMPT will contain:
 RPROMPT='%b%k%f'
+# the overwrite indicator, if overwrite is on;
 RPROMPT+='${__ZSHRC__overwrite_prompt}'
+# The number of jobs in the background, if there are any;
 RPROMPT+='%(1j.  ${__ZSHRC__jobs_prompt_prefix}%j job%(2j.s.)${__ZSHRC__jobs_prompt_suffix}.)'
-RPROMPT+='${__ZSHRC__error_prompt}'
+# The error code returned by the last command, if it was non-zero;
+RPROMPT+='%(0?..  ${__ZSHRC__error_prefix}$?${__ZSHRC__error_suffix})'
+# And, finally, the information from git status.
 RPROMPT+='${__ZSHRC__git_prompt}'
 
 # PS2 will be '» ' for depth 1, '» » ' for depth 2, etc.
@@ -358,19 +362,6 @@ PS2='%B%F{black}%(1_.» .)%(2_.» .)%(3_.» .)%(4_.» .)%(5_.» .)%(6_.» .)%(7_
 # Make RPS2 show [cont] when we're in a continuation line (the previous line ended with '\').
 RPS2='%B%F{black}[%f%b${${${:-$(print -P "%^")}//(#s)cmdsubst #/}//(#s)(#e)/cont}%B%F{black}]%f%b'
 
-# Show errors in RPROMPT ------------------------------------------------------------------------ #
-# Display a red square with the error code of the last command in the right prompt.
-__ZSHRC__error_prompt=''
-__ZSHRC__precmd_error_prompt() {
-  local last_error=$?
-  ((last_error)) \
-    && __ZSHRC__error_prompt="  ${__ZSHRC__error_prefix}${last_error}${__ZSHRC__error_suffix}"
-}
-__ZSHRC__preexec_error_prompt() {
-  __ZSHRC__error_prompt=''
-}
-add-zsh-hook precmd __ZSHRC__precmd_error_prompt
-add-zsh-hook preexec __ZSHRC__preexec_error_prompt
 
 # Window title ---------------------------------------------------------------------------------- #
 __ZSHRC__ellipsized_path_window_title() {
