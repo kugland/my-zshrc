@@ -297,7 +297,7 @@ __ZSHRC__overwrite_prompt=''                        # Overwrite mode indicator f
 
 # Sets cursor shape according to insert/overwrite state and update the indicator.
 __ZSHRC__cursorshape_overwrite() {
-  if [[ TERM != linux ]] {
+  if [[ $TTY = /dev/pts/* && -n $DISPLAY ]] {
     # Set the cursor shape (| for insert, _ for overwrite).
     print -n '\e]50;CursorShape='$((__ZSHRC__overwrite_state + 1))'\007'
   }
@@ -326,7 +326,7 @@ __ZSHRC__zlelineinit_overwrite() {
 
 # Always set to insert cursor before running commands.
 __ZSHRC__preexec_overwrite() {
-  [[ "$TERM" != linux ]] && print -n '\e]50;CursorShape=1\007'
+  [[ $TTY = /dev/pts/* && -n $DISPLAY ]] && print -n '\e]50;CursorShape=1\007'
 }
 add-zle-hook-widget line-init __ZSHRC__zlelineinit_overwrite
 add-zsh-hook preexec __ZSHRC__preexec_overwrite
