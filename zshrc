@@ -336,7 +336,7 @@ add-zsh-hook preexec __ZSHRC__preexec_insert
 # [ PROMPT SETUP ]------------------------------------------------------------------------------- #
 # A simple, but effective prompt
 PS1='%b%k%f'                                        # Reset color to default.
-[[ $LANG = *.UTF-8 ]] && PS1+=$'%{\e%G%}'           # Select UTF-8 character set
+[[ $LANG = *.UTF-8 ]] && PS1+=$'%{\e%%G%}'          # Select UTF-8 character set
 
 ((__ZSHRC__ssh_session)) && PS1+='%B%F{black}[%f%bssh%B%F{black}]%f%b ' # Show we're under ssh.
 
