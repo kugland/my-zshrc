@@ -193,6 +193,16 @@ if [[ $TTY != /dev/pts/* ]] { TMOUT=$((10 * 60)) }
 # ----------------------------------------------------------------------------------------------- #
 
 
+# [ LOAD LS COLORS ]----------------------------------------------------------------------------- #
+# Load colors from ~/.dir_colors or /etc/DIR_COLORS, or use the default colors if they don't exist.
+eval $(
+  [[ -f ~/.dir_colors ]] && dircolors -b ~/.dir_colors && return
+  [[ -f /etc/DIR_COLORS ]] && dircolors -b /etc/DIR_COLORS && return
+  dircolors -b
+)
+# ----------------------------------------------------------------------------------------------- #
+
+
 # [ SETUP KEYMAP ]------------------------------------------------------------------------------- #
 # Make sure the terminal is in application mode when zle is active. Only then are the values from
 # $terminfo valid.
@@ -596,12 +606,6 @@ add-zsh-hook zshexit __ZSHRC__zshexit_exit_message
 
 
 # [ CUSTOMIZE AND COLORIZE SOME COMMANDS ]------------------------------------------------------- #
-# Load colors from ~/.dir_colors or /etc/DIR_COLORS, or use the default colors if they don't exist.
-eval $(
-  [[ -f ~/.dir_colors ]] && dircolors -b ~/.dir_colors && return
-  [[ -f /etc/DIR_COLORS ]] && dircolors -b /etc/DIR_COLORS && return
-  dircolors -b
-)
 # Set the default flags for ls:
 #   -h: human readable sizes (e.g. 1K 2M 4G)
 #   --color=auto: use colors when output is a terminal
