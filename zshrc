@@ -371,6 +371,7 @@ PS1+=$'%{\e[?8h%}'                                  # Enable keyboard auto-repea
 PS1+=$'%{\e[?25h%}'                                 # Enable cursor.
 PS1+=$'%{\e[?1000l%}'                               # Disable X11 mouse events.
 PS1+=$'%{\e[?1004l%}'                               # Disable focus events.
+PS1+=$'%{\e[?2004h%}'                               # Enable bracketed paste.
 PS1+=$'%{\e7\e[0;0r\e8%}'                           # Reset scrolling region.
 
 # The main prompt.
