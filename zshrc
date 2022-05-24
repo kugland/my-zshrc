@@ -355,24 +355,25 @@ add-zsh-hook preexec __ZSHRC__preexec_overwrite
 # [ PROMPT SETUP ]------------------------------------------------------------------------------- #
 # A simple, but effective prompt
 # Reset the terminal to an usable state.
-PS1=''
-PS1+=$'%{\e[0m%}'                                   # Reset color.
-PS1+=$'%{\e(B\e)0%}'                                # Reset G0 and G1 charsets.
-[[ $LANG = *.UTF-8 ]] && PS1+=$'%{\e%%G%}'          # Select UTF-8 character set
-PS1+=$'%{\017%}'                                    # Disable VT100 pseudo-graphics.
-PS1+=$'%{\e[3l%}'                                   # Don't show control characters.
-PS1+=$'%{\e[4l%}'                                   # Disable insert mode.
-PS1+=$'%{\e[20l%}'                                  # Do not add CR after LF, VT and FF.
-PS1+=$'%{\e[?1l%}'                                  # Correct codes for cursor keys.
-PS1+=$'%{\e[?5l%}'                                  # Disable reverse video.
-PS1+=$'%{\e7\e[?6l\e8%}'                            # Fix cursor addressing.
-PS1+=$'%{\e[?7h%}'                                  # Enable auto wrap.
-PS1+=$'%{\e[?8h%}'                                  # Enable keyboard auto-repeat.
-PS1+=$'%{\e[?25h%}'                                 # Enable cursor.
-PS1+=$'%{\e[?1000l%}'                               # Disable X11 mouse events.
-PS1+=$'%{\e[?1004l%}'                               # Disable focus events.
-PS1+=$'%{\e[?2004h%}'                               # Enable bracketed paste.
-PS1+=$'%{\e7\e[0;0r\e8%}'                           # Reset scrolling region.
+PS1=$'%{\e7'                                        # Begin reset sequence, save cursor position.
+PS1+=$'\e[0m'                                       # Reset color.
+PS1+=$'\e(B\e)0'                                    # Reset G0 and G1 charsets.
+[[ $LANG = *.UTF-8 ]] && PS1+=$'\e%%G'              # Select UTF-8 character set
+PS1+=$'\017'                                        # Disable VT100 pseudo-graphics.
+PS1+=$'\e[3l'                                       # Don't show control characters.
+PS1+=$'\e[4l'                                       # Disable insert mode.
+PS1+=$'\e[20l'                                      # Do not add CR after LF, VT and FF.
+PS1+=$'\e[?1l'                                      # Correct codes for cursor keys.
+PS1+=$'\e[?5l'                                      # Disable reverse video.
+PS1+=$'\e[?6l'                                      # Fix cursor addressing.
+PS1+=$'\e[?7h'                                      # Enable auto wrap.
+PS1+=$'\e[?8h'                                      # Enable keyboard auto-repeat.
+PS1+=$'\e[?25h'                                     # Enable cursor.
+PS1+=$'\e[?1000l'                                   # Disable X11 mouse events.
+PS1+=$'\e[?1004l'                                   # Disable focus events.
+PS1+=$'\e[?2004h'                                   # Enable bracketed paste.
+PS1+=$'\e[0;0r'                                     # Reset scrolling region.
+PS1+=$'\e8%}'                                       # End reset sequence, restore cursor position.
 
 # The main prompt.
 ((__ZSHRC__ssh_session)) && PS1+='%B%F{black}[%f%bssh%B%F{black}]%f%b ' # Show we're under ssh.
