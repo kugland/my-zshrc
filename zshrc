@@ -84,7 +84,7 @@ unset -f append_path
 # [ LOAD FUNCTIONS AND MODULES FOR INTERACTIVE SHELLS ]------------------------------------------ #
 zmodload zsh/complist zsh/terminfo zsh/zle
 zmodload -m -F zsh/files b:zf_mkdir
-autoload -Uz add-zle-hook-widget add-zsh-hook compinit is-at-least
+autoload -Uz add-zsh-hook compinit is-at-least
 # ----------------------------------------------------------------------------------------------- #
 
 
@@ -209,8 +209,6 @@ eval $(
 # $terminfo valid.
 __ZSHRC__zlelineinit_appmode() { ((${+terminfo[smkx]})) && echoti smkx }
 __ZSHRC__zlelinefinish_appmode() { ((${+terminfo[rmkx]})) && echoti rmkx }
-add-zle-hook-widget line-init __ZSHRC__zlelineinit_appmode
-add-zle-hook-widget line-finish __ZSHRC__zlelinefinish_appmode
 
 # Remove keymaps except .safe and main.
 bindkey -D command emacs vicmd viins viopp visual
@@ -312,7 +310,9 @@ __ZSHRC__overwrite_prompt=''                        # Overwrite mode indicator f
 __ZSHRC__cursorshape_overwrite() {
   if [[ $TTY = /dev/pts/* && -n $DISPLAY ]] {
     # Set the cursor shape (| for insert, _ for overwrite).
-    print -n '\e]50;CursorShape='$((__ZSHRC__overwrite_state + 1))'\007'
+    print -n $'\e]50;CursorShape='$((__ZSHRC__overwrite_state + 1))$'\007'
+  } elif [[ $TERM = linux ]] {
+    ((__ZSHRC__overwrite_state)) && print -n $'\e[?6c' || print -n $'\e[?2c'
   }
 }
 
@@ -345,10 +345,26 @@ __ZSHRC__zlelineinit_overwrite() {
 
 # Always set to insert cursor before running commands.
 __ZSHRC__preexec_overwrite() {
-  [[ $TTY = /dev/pts/* && -n $DISPLAY ]] && print -n '\e]50;CursorShape=1\007'
+  [[ $TTY = /dev/pts/* && -n $DISPLAY ]] && print -n $'\e]50;CursorShape=1\007'
+  [[ $TERM = linux ]] && print -n $'\e[?2c'
 }
-add-zle-hook-widget line-init __ZSHRC__zlelineinit_overwrite
 add-zsh-hook preexec __ZSHRC__preexec_overwrite
+
+# ZLE hooks ------------------------------------------------------------------------------------- #
+# add-zle-hook-widget doesn't work under $TERM = linux, dunno why. (Maybe an issue with the
+# zsh-syntax-highlighting plugin?) Anyway, as a workaround, let's add the hooks manually.
+
+zle-line-init() {
+  __ZSHRC__zlelineinit_appmode
+  __ZSHRC__zlelineinit_overwrite
+}
+
+zle-line-finish() {
+  __ZSHRC__zlelinefinish_appmode
+}
+
+zle -N zle-line-init
+zle -N zle-line-finish
 # ----------------------------------------------------------------------------------------------- #
 
 
