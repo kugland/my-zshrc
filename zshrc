@@ -358,7 +358,7 @@ add-zsh-hook preexec __ZSHRC__preexec_overwrite
 PS1=$'%{\e7'                                        # Begin reset sequence, save cursor position.
 PS1+=$'\e[0m'                                       # Reset color.
 PS1+=$'\e(B\e)0'                                    # Reset G0 and G1 charsets.
-[[ $LANG = *.UTF-8 ]] && PS1+=$'\e%%G'              # Select UTF-8 character set
+[[ $LANG = *.UTF-8 ]]&&PS1+=$'\e%%G'||PS1+=$'\e%%@' # Select UTF-8 or ISO-8859-1 character set.
 PS1+=$'\017'                                        # Disable VT100 pseudo-graphics.
 PS1+=$'\e[3l'                                       # Don't show control characters.
 PS1+=$'\e[4l'                                       # Disable insert mode.
