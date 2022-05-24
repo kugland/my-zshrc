@@ -1,16 +1,16 @@
 # MIT License
-
+#
 # Copyright (c) 2022 André Kugland
-
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software
 # and associated documentation files (the "Software"), to deal in the Software without restriction,
 # including without limitation the rights to use, copy, modify, merge, publish, distribute,
 # sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-
+#
 # The above copyright notice and this permission notice shall be included in all copies or
 # substantial portions of the Software.
-
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
 # BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
 # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
@@ -415,7 +415,6 @@ PS2='%B%F{black}%(1_.» .)%(2_.» .)%(3_.» .)%(4_.» .)%(5_.» .)%(6_.» .)%(7_
 # Make RPS2 show [cont] when we're in a continuation line (the previous line ended with '\').
 RPS2='%B%F{black}[%f%b${${${:-$(print -P "%^")}//(#s)cmdsubst #/}//(#s)(#e)/cont}%B%F{black}]%f%b'
 
-
 # Window title ---------------------------------------------------------------------------------- #
 __ZSHRC__ellipsized_path_window_title() {
   local cwd=$(print -Pn '%~')                       # Current working directory.
@@ -547,7 +546,7 @@ __ZSHRC__simple_prompt() {
   __ZSHRC__jobs_prompt_suffix=' %f%b%k'
   __ZSHRC__error_prefix='%K{red}%B%F{white} '
   __ZSHRC__error_suffix=' %f%b%k'
-  __ZSHRC__indicator_overwrite                      # # Update the overwrite indicator if needed.
+  __ZSHRC__indicator_overwrite                      # Update the overwrite indicator if needed.
 }
 
 # Completely unnecessary, but I like it.
@@ -563,7 +562,7 @@ __ZSHRC__fancy_prompt() {
   __ZSHRC__jobs_prompt_suffix=$'%k%b%F{magenta}\uE0B4%f'
   __ZSHRC__error_prefix=$'%F{red}\uE0B6%K{red}%B%F{white}'
   __ZSHRC__error_suffix=$'%k%b%F{red}\uE0B4%f'
-  __ZSHRC__indicator_overwrite                      # # Update the overwrite indicator if needed.
+  __ZSHRC__indicator_overwrite                      # Update the overwrite indicator if needed.
 }
 
 # Select the prompt.
