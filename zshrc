@@ -269,6 +269,16 @@ for widget keycodes (
   history-incremental-search-backward "^R"
 ) { for keycode (${=keycodes}) { __ZSHRC__bindkeys $keycode $widget } }
 
+# Send break (Ctrl+D) --------------------------------------------------------------------------- #
+# This widget allows Ctrl+D to work even when the buffer is not empty. Pressing Ctrl+D twice on
+# an non-empty buffer will close Zsh.
+__ZSHRC__send_break() {
+  BUFFER+='^D'                                      # Add the ^D to the buffer.
+  zle send-break                                    # Send a break, similar to clicking Ctrl+C.
+}
+zle -N __ZSHRC__send_break
+bindkey '^D' __ZSHRC__send_break
+
 # Clear screen (Ctrl+L) ------------------------------------------------------------------------- #
 # Zsh's clear-screen doesn't clear the scrollback buffer, this does.
 __ZSHRC__clear_screen() {
