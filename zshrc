@@ -435,7 +435,7 @@ add-zsh-hook preexec __ZSHRC__preexec_window_title
   source /usr/share/gitstatus/gitstatus.plugin.zsh
 
   # Sets GITSTATUS_PROMPT to reflect the state of the current git repository.
-  function gitstatus_prompt_update() {
+  function __ZSHRC__gitstatus_prompt_update() {
     __ZSHRC__git_prompt=''                          # Reset git status prompt.
 
     # Call gitstatus_query synchronously. Note that gitstatus_query can also be
@@ -490,13 +490,13 @@ add-zsh-hook preexec __ZSHRC__preexec_window_title
     __ZSHRC__git_prompt="${p}"
   }
 
-  # Start gitstatusd instance with name "MY". The same name is passed to
-  # gitstatus_query in gitstatus_prompt_update. The flags with -1 as values
-  # enable staged, unstaged, conflicted and untracked counters.
+  # Start gitstatusd instance with name "MY". The same name is passed to gitstatus_query in
+  # __ZSHRC__gitstatus_prompt_update. The flags with -1 as values enable staged, unstaged,
+  # conflicted and untracked counters.
   gitstatus_stop 'MY' && gitstatus_start -s -1 -u -1 -c -1 -d -1 'MY'
 
   # On every prompt, fetch git status and set GITSTATUS_PROMPT.
-  add-zsh-hook precmd gitstatus_prompt_update
+  add-zsh-hook precmd __ZSHRC__gitstatus_prompt_update
 }
 
 # Simple prompt and fancy prompt ---------------------------------------------------------------- #
