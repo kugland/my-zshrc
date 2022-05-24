@@ -205,17 +205,6 @@ eval $(
 
 
 # [ SETUP KEYMAP ]------------------------------------------------------------------------------- #
-# Make sure the terminal is in application mode when zle is active. Only then are the values from
-# $terminfo valid.
-__ZSHRC__zlelineinit_appmode() { ((${+terminfo[smkx]})) && echoti smkx }
-__ZSHRC__zlelinefinish_appmode() { ((${+terminfo[rmkx]})) && echoti rmkx }
-
-# Remove keymaps except .safe and main.
-bindkey -D command emacs vicmd viins viopp visual
-
-# Remove most key bindings in the main keymap.
-bindkey -r '^'{'[','?',{,'[[','[O'}{A,B,C,D},E,F,G,H,I,J,K,L,N,O,P,Q,R,S,T,U,V,W,X,Y,Z}
-
 # Only keys used in this script should be listed here.
 typeset -A __ZSHRC__keys
 __ZSHRC__keys=(
@@ -254,7 +243,14 @@ __ZSHRC__bindkeys() {
   }
 }
 
-# Basic keyboard bindings.
+# Clear the Zsh's keymaps ----------------------------------------------------------------------- #
+# Remove keymaps except .safe and main.
+bindkey -D command emacs vicmd viins viopp visual
+
+# Remove most key bindings in the main keymap.
+bindkey -r '^'{'[','?',{,'[[','[O'}{A,B,C,D},E,F,G,H,I,J,K,L,N,O,P,Q,R,S,T,U,V,W,X,Y,Z}
+
+# Basic keyboard bindings ----------------------------------------------------------------------- #
 for widget keycodes (
   backward-delete-char              Backspace
   overwrite-mode                    Insert
@@ -273,7 +269,7 @@ for widget keycodes (
   history-incremental-search-backward "^R"
 ) { for keycode (${=keycodes}) { __ZSHRC__bindkeys $keycode $widget } }
 
-# Clear screen (Ctrl+L)
+# Clear screen (Ctrl+L) ------------------------------------------------------------------------- #
 __ZSHRC__clear_screen() {
   print -n '\e[3J'                                  # Clear the scrollback buffer.
   zle clear-screen                                  # Call zle's clear-screen widget.
@@ -281,8 +277,8 @@ __ZSHRC__clear_screen() {
 zle -N __ZSHRC__clear_screen
 bindkey '^L' __ZSHRC__clear_screen
 
+# Move to next/previous word (Ctrl+RightArrow / Ctrl + LeftArrow) ------------------------------- #
 if [[ $TERM != linux ]] {
-  # Move to next/previous word (Ctrl+RightArrow / Ctrl + LeftArrow)
   __ZSHRC__backward_word() { local WORDCHARS=${WORDCHARS:s#/#}; zle backward-word }
   __ZSHRC__forward_word() { local WORDCHARS=${WORDCHARS:s#/#}; zle forward-word }
 
@@ -349,6 +345,10 @@ __ZSHRC__preexec_overwrite() {
   print -n $'\e[5 q'                                # │ cursor on xterm and compatible
 }
 add-zsh-hook preexec __ZSHRC__preexec_overwrite
+
+# Make sure the terminal is in application mode when zle is active ------------------------------ #
+__ZSHRC__zlelineinit_appmode() { ((${+terminfo[smkx]})) && echoti smkx }
+__ZSHRC__zlelinefinish_appmode() { ((${+terminfo[rmkx]})) && echoti rmkx }
 
 # ZLE hooks ------------------------------------------------------------------------------------- #
 # add-zle-hook-widget doesn't work under $TERM = linux, dunno why. (Maybe an issue with the
