@@ -276,7 +276,6 @@ for widget keycodes (
 # Clear screen (Ctrl+L)
 __ZSHRC__clear_screen() {
   print -n '\e[3J'                                  # Clear the scrollback buffer.
-  [[ $LANG = *.UTF-8 ]] && print -n '\e[%G'         # Select UTF-8 character set.
   zle clear-screen                                  # Call zle's clear-screen widget.
 }
 zle -N __ZSHRC__clear_screen
