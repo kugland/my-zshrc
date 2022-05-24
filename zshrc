@@ -353,7 +353,8 @@ add-zsh-hook preexec __ZSHRC__preexec_overwrite
 
 
 # [ PROMPT SETUP ]------------------------------------------------------------------------------- #
-# A simple, but effective prompt
+# That's the way I like it.
+
 # Reset the terminal to an usable state.
 PS1=$'%{\e7'                                        # Begin reset sequence, save cursor position.
 PS1+=$'\e[0m'                                       # Reset color.
