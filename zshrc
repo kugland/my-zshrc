@@ -579,7 +579,7 @@ __ZSHRC__fancy_prompt() {
 
 # Select the prompt.
 # The fancy prompt will be used if the terminal is a virtual TTY, X11 is available, we're using
-# a UTF-8 locale, and we're not in a SSH session, the terminal supports 8-bit colors, otherwise
+# a UTF-8 locale, we're not in a SSH session, and the terminal supports 8-bit colors; otherwise
 # the simple prompt will be used.
 [[ $TTY = /dev/pts/* ]] \
   && [[ -n $DISPLAY ]] \
