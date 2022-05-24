@@ -307,9 +307,13 @@ __ZSHRC__overwrite_prompt=''                        # Overwrite mode indicator f
 
 # Sets cursor shape according to insert/overwrite state and update the indicator.
 __ZSHRC__cursorshape_overwrite() {
-  ((__ZSHRC__overwrite_state)) \
-    && print -n $'\e[?6c\e[3 q' \
-    || print -n $'\e[?2c\e[5 q'
+  if ((__ZSHRC__overwrite_state)) {                 # In overwrite mode:
+    print -n $'\e[?6c'                              # █ cursor on $TERM = linux
+    print -n $'\e[3 q'                              # | cursor on xterm and compatible
+  } else {                                          # In insert mode:
+    print -n $'\e[?2c'                              # _ cursor on $TERM = linux
+    print -n $'\e[5 q'                              # │ cursor on xterm and compatible
+  }
 }
 
 # Update the overwrite mode indicator.
@@ -334,14 +338,15 @@ zle -N __ZSHRC__keyhandler_overwrite
 __ZSHRC__bindkeys Insert __ZSHRC__keyhandler_overwrite
 
 __ZSHRC__zlelineinit_overwrite() {
-  # Since zle's overwrite mode is not persistent, we need to restore the state on each line.
+  # Since zle's overwrite mode is not persistent, we need to restore the state on each prompt.
   ((__ZSHRC__overwrite_state)) && zle overwrite-mode
   __ZSHRC__cursorshape_overwrite
 }
 
-# Always set to insert cursor before running commands.
 __ZSHRC__preexec_overwrite() {
-  print -n $'\e[?2c\e[5 q'
+  # Always reset to insert cursor before running commands.
+  print -n $'\e[?2c'                                # _ cursor on $TERM = linux
+  print -n $'\e[5 q'                                # │ cursor on xterm and compatible
 }
 add-zsh-hook preexec __ZSHRC__preexec_overwrite
 
