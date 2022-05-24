@@ -270,6 +270,7 @@ for widget keycodes (
 ) { for keycode (${=keycodes}) { __ZSHRC__bindkeys $keycode $widget } }
 
 # Clear screen (Ctrl+L) ------------------------------------------------------------------------- #
+# Zsh's clear-screen doesn't clear the scrollback buffer, this does.
 __ZSHRC__clear_screen() {
   print -n '\e[3J'                                  # Clear the scrollback buffer.
   zle clear-screen                                  # Call zle's clear-screen widget.
