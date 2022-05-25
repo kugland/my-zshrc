@@ -456,8 +456,10 @@ __ZSHRC__print_window_title() {
   cwd=${cwd//[[:cntrl:]]/ }                         # Strip control characters from the path.
   cmd=${cmd//[[:cntrl:]]/ }                         # Strip control characters from the commmand.
   print -n $'\e]0;'                                 # Start the title escape sequence.
-  ((__ZSHRC__ssh_session)) && print -Pnr '🌎 [%m] ' # If under SSH, add hostname and world emoji.
-  ((UID)) || print -n '🔴 '                         # Add a red circle emoji if the user is root.
+  ((__ZSHRC__ssh_session)) && print -n '🌎'         # Show we're running through SSH.
+  ((UID==0)) && print -n '🔴'                       # Add a red circle emoji if the user is root.
+  ((__ZSHRC__ssh_session)) && print -Pn ' [%m]'     # Show the SSH hostname.
+  ((UID==0||__ZSHRC__ssh_session)) && print -n ' '  # Add a space if we're root or SSH.
   print -nr -- $cwd                                 # Print the path.
   print -n ' • '                                    # Add a separator.
   print -nr -- $cmd                                 # Print the command name.
