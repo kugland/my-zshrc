@@ -198,8 +198,8 @@ __ZSHRC__putty=0
 if ((__ZSHRC__ssh_session)) && [[ $TERM = xterm ]] {
   __ZSHRC__putty=1
   for challenge response (
-    $'\eZ' $'\e[?6'
-    $'\e[>c' $'\e[>0;136;0'
+    $'\eZ' $'\e[?6'                                 # DECID: terminal type query.
+    $'\e[>c' $'\e[>0;136;0'                         # DA: report xterm version.
   ) {
     stty -echo
     print -n -- $challenge
