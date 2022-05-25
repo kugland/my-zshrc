@@ -453,13 +453,15 @@ __ZSHRC__ellipsized_path_window_title() {
 __ZSHRC__print_window_title() {
   local cwd=$(__ZSHRC__ellipsized_path_window_title) # Get the current directory (ellipsized).
   local cmd=$1                                      # Get the command name.
+  cwd=${cwd//[[:cntrl:]]/ }                         # Strip control characters from the path.
+  cmd=${cmd//[[:cntrl:]]/ }                         # Strip control characters from the commmand.
   print -n $'\e]0;'                                 # Start the title escape sequence.
   ((__ZSHRC__ssh_session)) && print -Pnr '🌎 [%m] ' # If under SSH, add hostname and world emoji.
   ((UID)) || print -n '🔴 '                         # Add a red circle emoji if the user is root.
-  print -nr $cwd                                    # Print the path.
+  print -nr -- $cwd                                 # Print the path.
   print -n ' • '                                    # Add a separator.
-  print -nr ${cmd}                                  # Print the command name.
-  print -n $'\a'                                    # End the title escape sequence.
+  print -nr -- $cmd                                 # Print the command name.
+  print -n $'\e\\'                                  # End the title escape sequence.
 }
 
 __ZSHRC__precmd_window_title() {                    # After the command is run, we're back in zsh,
