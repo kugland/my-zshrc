@@ -156,7 +156,6 @@ if [[ $TERM = xterm ]] {
   }
   unset TERM_RESPONSE
 }
-echo $__ZSHRC__putty
 readonly __ZSHRC__putty
 # ----------------------------------------------------------------------------------------------- #
 
