@@ -136,31 +136,6 @@ readonly HISTSIZE SAVEHIST HISTFILE                 # Make the variables readonl
 # ----------------------------------------------------------------------------------------------- #
 
 
-# DETECT PUTTY ---------------------------------------------------------------------------------- #
-# Some wild heuristic to detect if we're running under PuTTY.
-# One big problem here is that we are using a 0.5s timeout on the read command, so if the round
-# trip is longer than that, we will not detect it.
-__ZSHRC__putty=0
-if [[ $TERM = xterm ]] {
-  __ZSHRC__putty=1
-  for challenge response (
-    $'\eZ' $'\e[?6'
-    $'\e[>c' $'\e[>0;136;0'
-  ) {
-    stty -echo
-    print -n -- $challenge
-    read -r -d c -t 0.5 -s TERM_RESPONSE
-    stty echo
-    [[ $TERM_RESPONSE != $response ]] \
-      && __ZSHRC__putty=0 \
-      && break
-  }
-  unset TERM_RESPONSE
-}
-readonly __ZSHRC__putty
-# ----------------------------------------------------------------------------------------------- #
-
-
 # [ COLOR SUPPORT ]------------------------------------------------------------------------------ #
 # We'll assume that the terminal supports at least 4-bit colors, so we should detect support for
 # 8 and 24-bit color. I believe it's also reasonable to assume that a terminal that supports 24-bit
@@ -212,6 +187,31 @@ if ! ((__ZSHRC__ssh_session)) {
   unset -f __ZSHRC__is_sshd_my_ancestor
 }
 readonly __ZSHRC__ssh_session
+# ----------------------------------------------------------------------------------------------- #
+
+
+# [ DETECT PUTTY ]------------------------------------------------------------------------------- #
+# Some wild heuristic to detect if we're running under PuTTY.
+# One big problem here is that we are using a 0.5s timeout on the read command, so if the round
+# trip is longer than that, we will not detect it.
+__ZSHRC__putty=0
+if ((__ZSHRC__ssh_session)) && [[ $TERM = xterm ]] {
+  __ZSHRC__putty=1
+  for challenge response (
+    $'\eZ' $'\e[?6'
+    $'\e[>c' $'\e[>0;136;0'
+  ) {
+    stty -echo
+    print -n -- $challenge
+    read -r -d c -t 0.5 -s TERM_RESPONSE
+    stty echo
+    [[ $TERM_RESPONSE != $response ]] \
+      && __ZSHRC__putty=0 \
+      && break
+  }
+  unset TERM_RESPONSE
+}
+readonly __ZSHRC__putty
 # ----------------------------------------------------------------------------------------------- #
 
 
