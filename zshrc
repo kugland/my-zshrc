@@ -141,7 +141,8 @@ readonly HISTSIZE SAVEHIST HISTFILE                 # Make the variables readonl
 # 8 and 24-bit color. I believe it's also reasonable to assume that a terminal that supports 24-bit
 # color will also support 256-color.
 [[ $COLORTERM = (24bit|truecolor) ]]; ((?)); __ZSHRC__color24bit=$?  # ((?)) means $? = $? ? 0 : 1
-((__ZSHRC__color24bit)) || [[ $TERM = *256color ]]; ((?)); __ZSHRC__color8bit=$?
+((__ZSHRC__color24bit)) || [[ $TERM = *256color* ]]; ((?)); __ZSHRC__color8bit=$?
+readonly __ZSHRC__color24bit __ZSHRC__color8bit
 
 # If 24-bit color is not supported, and Zsh version is at least 5.7.0, we can use the module
 # 'zsh/nearcolor' to approximate 24-bit colors as 8-bit colors. On 4-bit terminals, your mileage
@@ -185,6 +186,7 @@ if ! ((__ZSHRC__ssh_session)) {
   __ZSHRC__is_sshd_my_ancestor && __ZSHRC__ssh_session=1
   unset -f __ZSHRC__is_sshd_my_ancestor
 }
+readonly __ZSHRC__ssh_session
 # ----------------------------------------------------------------------------------------------- #
 
 
