@@ -138,6 +138,8 @@ readonly HISTSIZE SAVEHIST HISTFILE                 # Make the variables readonl
 
 # DETECT PUTTY ---------------------------------------------------------------------------------- #
 # Some wild heuristic to detect if we're running under PuTTY.
+# One big problem here is that we are using a 0.5s timeout on the read command, so if the round
+# trip is longer than that, we will not detect it.
 __ZSHRC__putty=0
 if [[ $TERM = xterm ]] {
   __ZSHRC__putty=1
@@ -149,10 +151,9 @@ if [[ $TERM = xterm ]] {
     print -n -- $challenge
     read -r -d c -t 0.5 -s TERM_RESPONSE
     stty echo
-    if [[ $TERM_RESPONSE != $response ]]; then
-      __ZSHRC__putty=0
-      break
-    fi
+    [[ $TERM_RESPONSE != $response ]] \
+      && __ZSHRC__putty=0 \
+      && break
   }
   unset TERM_RESPONSE
 }
@@ -254,6 +255,7 @@ __ZSHRC__keys=(
   CtrlLeftArrow   "${terminfo[kLFT5]}"
 )
 
+# Workarounds for problematic terminals: rxvt and PuTTY.
 if [[ $TERM = rxvt* ]] {
   __ZSHRC__keys[CtrlPageUp]=$'\e[5^'
   __ZSHRC__keys[CtrlPageDown]=$'\e[6^'
