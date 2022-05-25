@@ -136,6 +136,31 @@ readonly HISTSIZE SAVEHIST HISTFILE                 # Make the variables readonl
 # ----------------------------------------------------------------------------------------------- #
 
 
+# DETECT PUTTY ---------------------------------------------------------------------------------- #
+# Some wild heuristic to detect if we're running under PuTTY.
+__ZSHRC__putty=0
+if [[ $TERM = xterm ]] {
+  __ZSHRC__putty=1
+  for challenge response (
+    $'\eZ' $'\e[?6'
+    $'\e[>c' $'\e[>0;136;0'
+  ) {
+    stty -echo
+    print -n -- $challenge
+    read -r -d c -t 0.5 -s TERM_RESPONSE
+    stty echo
+    if [[ $TERM_RESPONSE != $response ]]; then
+      __ZSHRC__putty=0
+      break
+    fi
+  }
+  unset TERM_RESPONSE
+}
+echo $__ZSHRC__putty
+readonly __ZSHRC__putty
+# ----------------------------------------------------------------------------------------------- #
+
+
 # [ COLOR SUPPORT ]------------------------------------------------------------------------------ #
 # We'll assume that the terminal supports at least 4-bit colors, so we should detect support for
 # 8 and 24-bit color. I believe it's also reasonable to assume that a terminal that supports 24-bit
@@ -210,25 +235,41 @@ eval $(
 # Only keys used in this script should be listed here.
 typeset -A __ZSHRC__keys
 __ZSHRC__keys=(
-  [Tab]="${terminfo[ht]} ^I ^[[Z"
-  [Backspace]="${terminfo[kbs]} ^H ^?"
-  [Insert]="${terminfo[kich1]} ^[[2;5~"
-  [Delete]="${terminfo[kdch1]} ^[[3;5~"
-  [Home]="${terminfo[khome]} ^[OH ^[[H ^[[1~ ^[[1;5H"
-  [End]="${terminfo[kend]} ^[OF ^[[F ^[[4~ ^[[1;5F"
-  [PageUp]="${terminfo[kpp]} ^[[5;5~ ^[[5;3~"
-  [PageDown]="${terminfo[knp]} ^[[6;5~ ^[[6;3~"
-  [ArrowUp]="${terminfo[kcuu1]} ^[OA ^[[A ^[[1;5A"
-  [ArrowDown]="${terminfo[kcud1]} ^[OB ^[[B ^[[1;5B"
-  [ArrowRight]="${terminfo[kRIT]} ${terminfo[kcuf1]} ^[[1;2C ^[[1;3C ^[OC ^[[C ^[[1;5C"
-  [ArrowLeft]="${terminfo[kLFT]} ${terminfo[kcub1]} ^[[1;2D ^[[1;3D ^[OD ^[[D ^[[1;5D"
-  [CtrlBackspace]="^H"
-  [CtrlDelete]="^[[3;5~"
-  [CtrlPageUp]="^[[5;5~"
-  [CtrlPageDown]="^[[6;5~"
-  [CtrlRightArrow]="^[[1;5C"
-  [CtrlLeftArrow]="^[[1;5D"
+  Tab             "${terminfo[ht]}"
+  Backspace       "${terminfo[kbs]}"
+  Insert          "${terminfo[kich1]}"
+  Delete          "${terminfo[kdch1]} ${terminfo[kDC]}"
+  Home            "${terminfo[khome]} ${terminfo[kHOM]}"
+  End             "${terminfo[kend]}  ${terminfo[kEND]}"
+  PageUp          "${terminfo[kpp]}   ${terminfo[kPRV]}"
+  PageDown        "${terminfo[knp]}   ${terminfo[kNXT]}"
+  ArrowUp         "${terminfo[kcuu1]} ${terminfo[kUP]}"
+  ArrowDown       "${terminfo[kcud1]} ${terminfo[kDN]}"
+  ArrowRight      "${terminfo[kcuf1]} ${terminfo[kRIT]}"
+  ArrowLeft       "${terminfo[kcub1]} ${terminfo[kLFT]}"
+  CtrlBackspace   "^H"
+  CtrlDelete      "${terminfo[kDC5]}"
+  CtrlPageUp      "${terminfo[kPRV5]}"
+  CtrlPageDown    "${terminfo[kNXT5]}"
+  CtrlRightArrow  "${terminfo[kRIT5]}"
+  CtrlLeftArrow   "${terminfo[kLFT5]}"
 )
+
+if [[ $TERM = rxvt* ]] {
+  __ZSHRC__keys[CtrlPageUp]=$'\e[5^'
+  __ZSHRC__keys[CtrlPageDown]=$'\e[6^'
+  __ZSHRC__keys[CtrlDelete]=$'\e[3^'
+  __ZSHRC__keys[CtrlRightArrow]=$'\eOc'
+  __ZSHRC__keys[CtrlLeftArrow]=$'\eOd'
+} elif ((__ZSHRC__putty)) {
+  __ZSHRC__keys[CtrlPageUp]=$'\e\e[5~'              # This are actually Alt+PageUp.
+  __ZSHRC__keys[CtrlPageDown]=$'\e\e[6~'            # This are actually Alt+PageDown.
+  __ZSHRC__keys[CtrlDelete]=''                      # Sorry, no Ctrl+Delete.
+  __ZSHRC__keys[RightArrow]=$'\eOC'
+  __ZSHRC__keys[LeftArrow]=$'\eOD'
+  __ZSHRC__keys[CtrlRightArrow]=$'\e[C'
+  __ZSHRC__keys[CtrlLeftArrow]=$'\e[D'
+}
 
 # Bind multiple keys at once.
 # $1: Either a key to the __ZSHRC__keys array, or multiple keys sequences separated by spaces.
@@ -387,6 +428,7 @@ zle -N zle-line-finish
 # Reset the terminal to an usable state.
 PS1=$'%{\e7'                                        # Begin reset sequence, save cursor position.
 PS1+=$'\e[0m'                                       # Reset color.
+PS1+=$'\e!p'                                        # Soft terminal reset.
 PS1+=$'\e(B\e)0'                                    # Reset G0 and G1 charsets.
 [[ $LANG = *.UTF-8 ]]&&PS1+=$'\e%%G'||PS1+=$'\e%%@' # Select UTF-8 or ISO-8859-1 character set.
 PS1+=$'\x0f'                                        # Disable VT100 pseudo-graphics.
