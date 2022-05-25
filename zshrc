@@ -89,7 +89,7 @@ autoload -Uz add-zsh-hook compinit is-at-least
 
 
 # [ SET SHELL OPTIONS ]-------------------------------------------------------------------------- #
-IFS=$' \t\n\000'                                    # Set IFS to space, tab, newline and null.
+IFS=$' \t\n\x00'                                    # Set IFS to space, tab, newline and null.
 setopt extended_glob                                # Enable Zsh extended globbing.
 setopt interactive_comments                         # Enable comments in interactive shells.
 setopt no_beep                                      # Disable beep on errors.
@@ -282,7 +282,7 @@ bindkey '^D' __ZSHRC__send_break
 # Clear screen (Ctrl+L) ------------------------------------------------------------------------- #
 # Zsh's clear-screen doesn't clear the scrollback buffer, this does.
 __ZSHRC__clear_screen() {
-  print -n '\e[3J'                                  # Clear the scrollback buffer.
+  print -n $'\e[3J'                                 # Clear the scrollback buffer.
   zle clear-screen                                  # Call zle's clear-screen widget.
 }
 zle -N __ZSHRC__clear_screen
@@ -387,7 +387,7 @@ PS1=$'%{\e7'                                        # Begin reset sequence, save
 PS1+=$'\e[0m'                                       # Reset color.
 PS1+=$'\e(B\e)0'                                    # Reset G0 and G1 charsets.
 [[ $LANG = *.UTF-8 ]]&&PS1+=$'\e%%G'||PS1+=$'\e%%@' # Select UTF-8 or ISO-8859-1 character set.
-PS1+=$'\017'                                        # Disable VT100 pseudo-graphics.
+PS1+=$'\x0f'                                        # Disable VT100 pseudo-graphics.
 PS1+=$'\e[3l'                                       # Don't show control characters.
 PS1+=$'\e[4l'                                       # Disable insert mode.
 PS1+=$'\e[20l'                                      # Do not add CR after LF, VT and FF.
@@ -453,13 +453,13 @@ __ZSHRC__ellipsized_path_window_title() {
 __ZSHRC__print_window_title() {
   local cwd=$(__ZSHRC__ellipsized_path_window_title) # Get the current directory (ellipsized).
   local cmd=$1                                      # Get the command name.
-  print -n '\e]0;'                                  # Start the title escape sequence.
+  print -n $'\e]0;'                                 # Start the title escape sequence.
   ((__ZSHRC__ssh_session)) && print -Pnr '🌎 [%m] ' # If under SSH, add hostname and world emoji.
   ((UID)) || print -n '🔴 '                         # Add a red circle emoji if the user is root.
   print -nr $cwd                                    # Print the path.
   print -n ' • '                                    # Add a separator.
   print -nr ${cmd}                                  # Print the command name.
-  print -n '\007'                                   # End the title escape sequence.
+  print -n $'\a'                                    # End the title escape sequence.
 }
 
 __ZSHRC__precmd_window_title() {                    # After the command is run, we're back in zsh,
