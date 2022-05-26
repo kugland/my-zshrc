@@ -65,9 +65,11 @@ append_path() {                                     # Append a path to the PATH 
   emulate -L zsh                                    # This function will be available for scripts
   ((path[(Ie)$1])) && return || path+=($1)          # in /etc/profile.d.
 }
+setopt null_glob
 for script (/etc/profile.d/*.sh) {
   [[ -x "$script" ]] && emulate bash -c "source $script"  # Source script using bash emulation.
 }
+setopt no_null_glob
 unset -f append_path
 # ----------------------------------------------------------------------------------------------- #
 
@@ -234,7 +236,7 @@ eval $(
 typeset -A __ZSHRC__keys
 __ZSHRC__keys=(
   Tab             "${terminfo[ht]}"
-  Backspace       "${terminfo[kbs]}"
+  Backspace       "${terminfo[kbs]} ^?"
   Insert          "${terminfo[kich1]}"
   Delete          "${terminfo[kdch1]} ${terminfo[kDC]}"
   Home            "${terminfo[khome]} ${terminfo[kHOM]}"
@@ -246,11 +248,11 @@ __ZSHRC__keys=(
   ArrowRight      "${terminfo[kcuf1]} ${terminfo[kRIT]}"
   ArrowLeft       "${terminfo[kcub1]} ${terminfo[kLFT]}"
   CtrlBackspace   "^H"
-  CtrlDelete      "${terminfo[kDC5]}"
-  CtrlPageUp      "${terminfo[kPRV5]}"
-  CtrlPageDown    "${terminfo[kNXT5]}"
-  CtrlRightArrow  "${terminfo[kRIT5]}"
-  CtrlLeftArrow   "${terminfo[kLFT5]}"
+  CtrlDelete      "${terminfo[kDC5]} ^[[3;5~"
+  CtrlPageUp      "${terminfo[kPRV5]} ^[[5;5~"
+  CtrlPageDown    "${terminfo[kNXT5]} ^[[6;5~"
+  CtrlRightArrow  "${terminfo[kRIT5]} ^[[1;5C"
+  CtrlLeftArrow   "${terminfo[kLFT5]} ^[[1;5D"
 )
 
 # Workarounds for problematic terminals: rxvt and PuTTY.
@@ -632,7 +634,6 @@ __ZSHRC__fancy_prompt() {
 # a UTF-8 locale, we're not in a SSH session, and the terminal supports 8-bit colors; otherwise
 # the simple prompt will be used.
 [[ $TTY = /dev/pts/* ]] \
-  && [[ -n $DISPLAY ]] \
   && [[ $LANG = *UTF-8* ]] \
   && ! ((__ZSHRC__ssh_session)) \
   && ((__ZSHRC__color8bit)) \
