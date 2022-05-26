@@ -352,6 +352,42 @@ if [[ $TERM != linux ]] {
   ) { zle -N $widget && __ZSHRC__bindkeys $keycode $widget }
 }
 
+# Reset ----------------------------------------------------------------------------------------- #
+__ZSHRC__precmd_reset() {
+  if [[ -t 0 ]] {
+    stty sane -imaxbel -brkint ixoff                # Reset terminal settings.
+    for code (
+      "\e<\e\\"                                     # Disable VT52 mode.
+      "\e[!p"                                       # Soft reset.
+      "\x0f"                                        # Switch to G0 charset.
+      "\e[3l"                                       # DECCRM: Don't show control characters.
+      "\e[20l"                                      # LF/NL: Do not add CR after LF, VT and FF.
+      "\e[?5l"                                      # DECSCNM: Disable reverse video.
+      "\e[?8h"                                      # DECARM: Enable keyboard auto-repeat.
+      "\e[?"{9,100{0..6},101{5,6}}"l"               # Disable xterm mouse and focus events.
+      "\e[?2004h"                                   # Enable bracketed paste.
+    ) {
+      print -n -- $code
+    }
+    if [[ $LANG = *UTF-8* ]] {
+      stty iutf8                                    # Assume input characters are UTF-8 encoded.
+      print -n -- "\e%G"                            # Select UTF-8 encoding.
+    } else {
+      print -n -- "\e%@"                            # Select default encoding.
+    }
+    echoti smkx                                     # DECCKM/DECKPAM: Application mode.
+    print -n -- "\e\\"                              # String terminator.
+  }
+}
+
+add-zsh-hook precmd __ZSHRC__precmd_reset
+
+zle-line-finish() {
+  echoti rmkx                                       # Disable application mode
+}
+
+zle -N zle-line-finish
+
 # Insert and overwrite mode --------------------------------------------------------------------- #
 __ZSHRC__overwrite_state=0                          # Overwrite mode state, 0 = off, 1 = on
 __ZSHRC__overwrite_prompt=''                        # Overwrite mode indicator for RPROMPT
@@ -388,7 +424,7 @@ __ZSHRC__keyhandler_overwrite() {
 zle -N __ZSHRC__keyhandler_overwrite
 __ZSHRC__bindkeys Insert __ZSHRC__keyhandler_overwrite
 
-__ZSHRC__zlelineinit_overwrite() {
+__ZSHRC__precmd_overwrite() {
   # Since zle's overwrite mode is not persistent, we need to restore the state on each prompt.
   ((__ZSHRC__overwrite_state)) && zle overwrite-mode
   __ZSHRC__cursorshape_overwrite
@@ -399,56 +435,15 @@ __ZSHRC__preexec_overwrite() {
   print -n $'\e[?2c'                                # _ cursor on $TERM = linux
   print -n $'\e[5 q'                                # │ cursor on xterm and compatible
 }
+add-zsh-hook precmd __ZSHRC__precmd_overwrite
 add-zsh-hook preexec __ZSHRC__preexec_overwrite
-
-# Make sure the terminal is in application mode when zle is active ------------------------------ #
-__ZSHRC__zlelineinit_appmode() { ((${+terminfo[smkx]})) && echoti smkx }
-__ZSHRC__zlelinefinish_appmode() { ((${+terminfo[rmkx]})) && echoti rmkx }
-
-# ZLE hooks ------------------------------------------------------------------------------------- #
-# add-zle-hook-widget doesn't work under $TERM = linux, dunno why. (Maybe an issue with the
-# zsh-syntax-highlighting plugin?) Anyway, as a workaround, let's add the hooks manually.
-
-zle-line-init() {
-  __ZSHRC__zlelineinit_appmode
-  __ZSHRC__zlelineinit_overwrite
-}
-
-zle-line-finish() {
-  __ZSHRC__zlelinefinish_appmode
-}
-
-zle -N zle-line-init
-zle -N zle-line-finish
-# ----------------------------------------------------------------------------------------------- #
 
 
 # [ PROMPT SETUP ]------------------------------------------------------------------------------- #
 # That's the way I like it.
 
-# Reset the terminal to an usable state.
-PS1=$'%{\e7'                                        # Begin reset sequence, save cursor position.
-PS1+=$'\e[0m'                                       # Reset color.
-PS1+=$'\e!p'                                        # Soft terminal reset.
-PS1+=$'\e(B\e)0'                                    # Reset G0 and G1 charsets.
-[[ $LANG = *.UTF-8 ]]&&PS1+=$'\e%%G'||PS1+=$'\e%%@' # Select UTF-8 or ISO-8859-1 character set.
-PS1+=$'\x0f'                                        # Disable VT100 pseudo-graphics.
-PS1+=$'\e[3l'                                       # Don't show control characters.
-PS1+=$'\e[4l'                                       # Disable insert mode.
-PS1+=$'\e[20l'                                      # Do not add CR after LF, VT and FF.
-PS1+=$'\e[?1l'                                      # Correct codes for cursor keys.
-PS1+=$'\e[?5l'                                      # Disable reverse video.
-PS1+=$'\e[?6l'                                      # Fix cursor addressing.
-PS1+=$'\e[?7h'                                      # Enable auto wrap.
-PS1+=$'\e[?8h'                                      # Enable keyboard auto-repeat.
-PS1+=$'\e[?25h'                                     # Enable cursor.
-PS1+=$'\e[?1000l'                                   # Disable X11 mouse events.
-PS1+=$'\e[?1004l'                                   # Disable focus events.
-PS1+=$'\e[?2004h'                                   # Enable bracketed paste.
-PS1+=$'\e[0;0r'                                     # Reset scrolling region.
-PS1+=$'\e8%}'                                       # End reset sequence, restore cursor position.
-
 # The main prompt.
+PS1=''
 ((__ZSHRC__ssh_session)) && PS1+='%B%F{black}[%f%bssh%B%F{black}]%f%b ' # Show we're under ssh.
 PS1+='${__ZSHRC__PS1_before_user_host}%(!..%n@)%m'  # user@hostname / hostname
 PS1+='${__ZSHRC__PS1_before_path}%~'                # :path
