@@ -424,18 +424,24 @@ __ZSHRC__keyhandler_overwrite() {
 zle -N __ZSHRC__keyhandler_overwrite
 __ZSHRC__bindkeys Insert __ZSHRC__keyhandler_overwrite
 
-__ZSHRC__precmd_overwrite() {
+__ZSHRC__zlelineinit_overwrite() {
   # Since zle's overwrite mode is not persistent, we need to restore the state on each prompt.
   ((__ZSHRC__overwrite_state)) && zle overwrite-mode
   __ZSHRC__cursorshape_overwrite
 }
+
+zle-line-init() {
+  __ZSHRC__zlelineinit_overwrite
+}
+
+zle -N zle-line-init
 
 __ZSHRC__preexec_overwrite() {
   # Always reset to insert cursor before running commands.
   print -n $'\e[?2c'                                # _ cursor on $TERM = linux
   print -n $'\e[5 q'                                # │ cursor on xterm and compatible
 }
-add-zsh-hook precmd __ZSHRC__precmd_overwrite
+
 add-zsh-hook preexec __ZSHRC__preexec_overwrite
 
 
