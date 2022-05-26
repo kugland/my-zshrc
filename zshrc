@@ -407,8 +407,10 @@ __ZSHRC__cursorshape_overwrite() {
 
 # Update the overwrite mode indicator.
 __ZSHRC__indicator_overwrite() {
+  local overwrite_indicator
+  zstyle -s ':myzshrc:prompt' overwrite-indicator overwrite_indicator
   ((__ZSHRC__overwrite_state)) \
-    && __ZSHRC__overwrite_prompt=$__ZSHRC__overwrite_indicator \
+    && __ZSHRC__overwrite_prompt='  '$overwrite_indicator \
     || __ZSHRC__overwrite_prompt=''
 }
 
@@ -450,30 +452,37 @@ add-zsh-hook preexec __ZSHRC__preexec_overwrite
 # [ PROMPT SETUP ]------------------------------------------------------------------------------- #
 # That's the way I like it.
 
-# The main prompt.
-PS1=''
-((__ZSHRC__ssh_session)) && PS1+='%B%F{black}[%f%bssh%B%F{black}]%f%b ' # Show we're under ssh.
-PS1+='${__ZSHRC__PS1_before_user_host}%(!..%n@)%m'  # user@hostname / hostname
-PS1+='${__ZSHRC__PS1_before_path}%~'                # :path
-PS1+='${__ZSHRC__PS1_after_path}'                   # % / #
+myzshrc_prompt_setup() {
+  # PS2 will be '» ' for depth 1, '» » ' for depth 2, etc.
+  # '»' is in ISO-8859-1, in CP437, in CP850, so it's probably safe to use it.
+  PS2='%B%F{black}%(1_.» .)%(2_.» .)%(3_.» .)%(4_.» .)%(5_.» .)%(6_.» .)%(7_.» .)%(8_.» .)%f%b'
+  # RPS2 will be type of the current open block (if, while, for, etc.)
+  # Make RPS2 show [cont] when we're in a continuation line (the previous line ended with '\').
+  RPS2='%B%F{black}[%f%b${${${:-$(print -P "%^")}//(#s)cmdsubst #/}//(#s)(#e)/cont}%B%F{black}]%f%b'
+}
 
-# RPROMPT will contain:
-RPROMPT='%b%k%f'
-# the overwrite indicator, if overwrite is on;
-RPROMPT+='${__ZSHRC__overwrite_prompt}'
-# The number of jobs in the background, if there are any;
-RPROMPT+='%(1j.  ${__ZSHRC__jobs_prompt_prefix}%j job%(2j.s.)${__ZSHRC__jobs_prompt_suffix}.)'
-# The error code returned by the last command, if it was non-zero;
-RPROMPT+='%(0?..  ${__ZSHRC__error_prefix}$?${__ZSHRC__error_suffix})'
-# And, finally, the information from git status.
-RPROMPT+='${__ZSHRC__git_prompt}'
+myzshrc_prompt_precmd() {
+  local before_userhost before_path after_path \
+        ssh_indicator overwrite_indicator jobs_indicator error_indicator
 
-# PS2 will be '» ' for depth 1, '» » ' for depth 2, etc.
-# '»' is in ISO-8859-1, in CP437, in CP850, so it's probably safe to use it.
-PS2='%B%F{black}%(1_.» .)%(2_.» .)%(3_.» .)%(4_.» .)%(5_.» .)%(6_.» .)%(7_.» .)%(8_.» .)%f%b'
-# RPS2 will be type of the current open block (if, while, for, etc.)
-# Make RPS2 show [cont] when we're in a continuation line (the previous line ended with '\').
-RPS2='%B%F{black}[%f%b${${${:-$(print -P "%^")}//(#s)cmdsubst #/}//(#s)(#e)/cont}%B%F{black}]%f%b'
+  zstyle -s ':myzshrc:prompt' before-userhost before_userhost
+  zstyle -s ':myzshrc:prompt' before-path before_path
+  zstyle -s ':myzshrc:prompt' after-path after_path
+  zstyle -s ':myzshrc:prompt' ssh-indicator ssh_indicator
+  zstyle -s ':myzshrc:prompt' overwrite-indicator overwrite_indicator
+  zstyle -s ':myzshrc:prompt' jobs-indicator jobs_indicator
+  zstyle -s ':myzshrc:prompt' error-indicator error_indicator
+
+  ((__ZSHRC__ssh_session)) && PS1=$ssh_indicator' ' || PS1=''
+  PS1+="${before_userhost}%(!..%n@)%m${before_path}%~${after_path}"
+
+  RPROMPT="\${__ZSHRC__overwrite_prompt}%(1j.  $jobs_indicator.)%(0?..  $error_indicator)  "
+  RPROMPT+='${__ZSHRC__git_prompt}'
+}
+
+add-zsh-hook precmd myzshrc_prompt_precmd
+
+myzshrc_prompt_setup
 
 # Window title ---------------------------------------------------------------------------------- #
 __ZSHRC__ellipsized_path_window_title() {
@@ -602,14 +611,13 @@ add-zsh-hook preexec __ZSHRC__preexec_window_title
 # A simple prompt that will work nicely in a console with limited charset and only 16 colors,
 # such as the Linux console.
 __ZSHRC__simple_prompt() {
-  __ZSHRC__PS1_before_user_host='%B%F{%(!.red.green)}'
-  __ZSHRC__PS1_before_path='%f%b:%B%F{blue}'
-  __ZSHRC__PS1_after_path='%f%b%# '
-  __ZSHRC__overwrite_indicator="  %K{blue}%B%F{white} over %f%b%k"
-  __ZSHRC__jobs_prompt_prefix='%K{magenta}%B%F{white} '
-  __ZSHRC__jobs_prompt_suffix=' %f%b%k'
-  __ZSHRC__error_prefix='%K{red}%B%F{white} '
-  __ZSHRC__error_suffix=' %f%b%k'
+  zstyle ':myzshrc:prompt' before-userhost '%B%F{%(!.red.green)}'
+  zstyle ':myzshrc:prompt' before-path '%f%b:%B%F{blue}'
+  zstyle ':myzshrc:prompt' after-path '%f%b%# '
+  zstyle ':myzshrc:prompt' ssh-indicator '%B%F{black}[%f%bssh%B%F{black}]%f%b'
+  zstyle ':myzshrc:prompt' overwrite-indicator '%K{blue}%B%F{white} over %f%b%k'
+  zstyle ':myzshrc:prompt' jobs-indicator '%K{magenta}%B%F{white} %j job%(2j.s.) %f%b%k'
+  zstyle ':myzshrc:prompt' error-indicator '%K{red}%B%F{white} %? %f%b%k'
   __ZSHRC__indicator_overwrite                      # Update the overwrite indicator if needed.
 }
 
@@ -617,15 +625,14 @@ __ZSHRC__simple_prompt() {
 # This prompt requires Nerd Fonts (https://www.nerdfonts.com/).
 __ZSHRC__fancy_prompt() {
   # For the main prompt.
-  local ps1usrcolor='%(!.#b24742.#47a730)'
-  __ZSHRC__PS1_before_user_host="%K{$ps1usrcolor}%B%F{white} "
-  __ZSHRC__PS1_before_path="%b%F{$ps1usrcolor}%K{#547bb5}"$'\uE0B4'" %B%F{white}"
-  __ZSHRC__PS1_after_path="%b%F{#547bb5}%K{$ps1usrcolor}"$'\uE0B4'"%k%F{$ps1usrcolor}"$'\uE0B4'"%f "
-  __ZSHRC__overwrite_indicator=$'%F{blue}\uE0B6%K{blue}%B%F{white}over%k%b%F{blue}\uE0B4%f'
-  __ZSHRC__jobs_prompt_prefix=$'%F{magenta}\uE0B6%K{magenta}%B%F{white}'
-  __ZSHRC__jobs_prompt_suffix=$'%k%b%F{magenta}\uE0B4%f'
-  __ZSHRC__error_prefix=$'%F{red}\uE0B6%K{red}%B%F{white}'
-  __ZSHRC__error_suffix=$'%k%b%F{red}\uE0B4%f'
+  local userhost_color='%(!.#b24742.#47a730)'
+  zstyle ':myzshrc:prompt' before-userhost "%K{$userhost_color}%B%F{white} "
+  zstyle ':myzshrc:prompt' before-path '%b%F{'$userhost_color$'}%K{#547bb5}\uE0B4 %B%F{white}'
+  zstyle ':myzshrc:prompt' after-path '%b%F{#547bb5}%K{'$userhost_color$'}\uE0B4%k%F{'$userhost_color$'}\uE0B4%f '
+  zstyle ':myzshrc:prompt' ssh-indicator "%B%F{black}[%f%bssh%B%F{black}]%f%b"
+  zstyle ':myzshrc:prompt' overwrite-indicator $'%F{blue}\uE0B6%K{blue}%B%F{white}over%k%b%F{blue}\uE0B4%f'
+  zstyle ':myzshrc:prompt' jobs-indicator $'%F{magenta}\uE0B6%K{magenta}%B%F{white}%j job%(2j.s.)%k%b%F{magenta}\uE0B4%f'
+  zstyle ':myzshrc:prompt' error-indicator $'%F{red}\uE0B6%K{red}%B%F{white}%?%k%b%F{red}\uE0B4%f'
   __ZSHRC__indicator_overwrite                      # Update the overwrite indicator if needed.
 }
 
