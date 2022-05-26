@@ -84,7 +84,7 @@ unset -f append_path
 # ----------------------------------------------------------------------------------------------- #
 
 # [ LOAD FUNCTIONS AND MODULES FOR INTERACTIVE SHELLS ]------------------------------------------ #
-zmodload zsh/complist zsh/terminfo zsh/zle
+zmodload zsh/complist zsh/terminfo zsh/zutil zsh/zle
 zmodload -m -F zsh/files b:zf_mkdir
 autoload -Uz add-zsh-hook compinit is-at-least
 # ----------------------------------------------------------------------------------------------- #
@@ -551,16 +551,22 @@ add-zsh-hook preexec __ZSHRC__preexec_window_title
     gitstatus_query 'MY'                  || return 1  # error
     [[ $VCS_STATUS_RESULT == 'ok-sync' ]] || return 0  # not a git repo
 
-    # Colors for git status, either 4-bit or 8-bit colors.
-    local git_color=$(__ZSHRC__color '%B%F{red}' '%B%F{208}')
-    local cyan=$(__ZSHRC__color '%F{cyan}' '%F{36}')
-    local b_cyan=$(__ZSHRC__color '%B%F{cyan}' '%B%F{86}')
-    local red=$(__ZSHRC__color '%F{red}' '%F{210}')
-    local b_red=$(__ZSHRC__color '%B%F{red}' '%B%F{210}')
-    local green=$(__ZSHRC__color '%F{green}' '%F{154}')
-    local b_green=$(__ZSHRC__color '%B%F{green}' '%B%F{154}')
+    local git_prefix stash_count staged_count unstaged_count untracked_count commits_behind \
+          commits_ahead push_commits_behind push_commits_ahead action num_conflicted
 
-    local p="  ${git_color}git%f%b "                # Git status prefix
+    zstyle -s ':myzshrc:gitstatus' git-prefix git_prefix
+    zstyle -s ':myzshrc:gitstatus' stash-count stash_count
+    zstyle -s ':myzshrc:gitstatus' staged-count staged_count
+    zstyle -s ':myzshrc:gitstatus' unstaged-count unstaged_count
+    zstyle -s ':myzshrc:gitstatus' untracked-count untracked_count
+    zstyle -s ':myzshrc:gitstatus' commits-ahead commits_ahead
+    zstyle -s ':myzshrc:gitstatus' commits-behind commits_behind
+    zstyle -s ':myzshrc:gitstatus' push-commits-ahead push_commits_ahead
+    zstyle -s ':myzshrc:gitstatus' push-commits-behind push_commits_behind
+    zstyle -s ':myzshrc:gitstatus' action action
+    zstyle -s ':myzshrc:gitstatus' num-conflicted num_conflicted
+
+    local p="  ${git_prefix} "                      # Git status prefix
     local where                                     # Branch name, tag or commit
     if [[ -n $VCS_STATUS_LOCAL_BRANCH ]] {
       where=$VCS_STATUS_LOCAL_BRANCH                # Use local branch name, e.g. 'master'.
@@ -574,26 +580,22 @@ add-zsh-hook preexec __ZSHRC__preexec_window_title
     (($#where > 32)) && where[13,-13]="…"           # truncate long branch names/tags
     p+="${where//\%/%%}"                            # escape '%'
 
-    # *42 (bright black) if has stashes.
-    ((VCS_STATUS_STASHES)) && p+=" %B%F{black}*$VCS_STATUS_STASHES%b%f"
-    # +42 (green) if has staged changes.
-    ((VCS_STATUS_NUM_STAGED)) && p+=" $green+$b_green$VCS_STATUS_NUM_STAGED%b%f"
-    # +42 (red) if has unstaged changes.
-    ((VCS_STATUS_NUM_UNSTAGED)) && p+=" $red+$b_red$VCS_STATUS_NUM_UNSTAGED%b%f"
-    # *42 (red) if has untracked files.
-    ((VCS_STATUS_NUM_UNTRACKED)) && p+=" $red*$b_red$VCS_STATUS_NUM_UNTRACKED%b%f"
-    # ↓42 (cyan) if behind the remote.
-    ((VCS_STATUS_COMMITS_BEHIND)) && p+=" $cyan↓$b_cyan$VCS_STATUS_COMMITS_BEHIND%b%f"
-    # ↑42 (cyan) if ahead of the remote.
-    ((VCS_STATUS_COMMITS_AHEAD )) && p+=" $cyan↑$b_cyan$VCS_STATUS_COMMITS_AHEAD%b%f"
-    # ←42 (cyan) if behind the push remote.
-    ((VCS_STATUS_PUSH_COMMITS_BEHIND)) && p+=" $cyan←$b_cyan$VCS_STATUS_PUSH_COMMITS_BEHIND%b%f"
-    # →42 (cyan) if ahead of the push remote.
-    ((VCS_STATUS_PUSH_COMMITS_AHEAD)) && p+=" $cyan→$b_cyan$VCS_STATUS_PUSH_COMMITS_AHEAD%b%f"
-    # 'merge' if the repo is in an unusual state.
-    [[ -n $VCS_STATUS_ACTION ]] && p+=" $b_red$VCS_STATUS_ACTION%b%f"
-    # !42 if has merge conflicts.
-    ((VCS_STATUS_NUM_CONFLICTED)) && p+=" $red!$b_red$VCS_STATUS_NUM_CONFLICTED%b%f"
+    local value style
+
+    for value style (
+      $VCS_STATUS_STASHES $stash_count
+      $VCS_STATUS_NUM_STAGED $staged_count
+      $VCS_STATUS_NUM_UNSTAGED $unstaged_count
+      $VCS_STATUS_NUM_UNTRACKED $untracked_count
+      $VCS_STATUS_COMMITS_BEHIND $commits_behind
+      $VCS_STATUS_COMMITS_AHEAD $commits_ahead
+      $VCS_STATUS_PUSH_COMMITS_BEHIND $push_commits_behind
+      $VCS_STATUS_PUSH_COMMITS_AHEAD $push_commits_ahead
+      $VCS_STATUS_NUM_CONFLICTED $num_conflicted
+    ) {
+      ((value)) && p+=" ${style}${value}%b%f"
+    }
+    [[ -n $VCS_STATUS_ACTION ]] && p+=" ${action}${VCS_STATUS_ACTION}%b%f"
 
     __ZSHRC__git_prompt="${p}"
   }
@@ -611,13 +613,24 @@ add-zsh-hook preexec __ZSHRC__preexec_window_title
 # A simple prompt that will work nicely in a console with limited charset and only 16 colors,
 # such as the Linux console.
 __ZSHRC__simple_prompt() {
-  zstyle ':myzshrc:prompt' before-userhost '%B%F{%(!.red.green)}'
-  zstyle ':myzshrc:prompt' before-path '%f%b:%B%F{blue}'
+  zstyle ':myzshrc:prompt' before-userhost '%B%F{%(!.1.2)}'
+  zstyle ':myzshrc:prompt' before-path '%f%b:%B%4F'
   zstyle ':myzshrc:prompt' after-path '%f%b%# '
-  zstyle ':myzshrc:prompt' ssh-indicator '%B%F{black}[%f%bssh%B%F{black}]%f%b'
-  zstyle ':myzshrc:prompt' overwrite-indicator '%K{blue}%B%F{white} over %f%b%k'
-  zstyle ':myzshrc:prompt' jobs-indicator '%K{magenta}%B%F{white} %j job%(2j.s.) %f%b%k'
-  zstyle ':myzshrc:prompt' error-indicator '%K{red}%B%F{white} %? %f%b%k'
+  zstyle ':myzshrc:prompt' ssh-indicator '%B%0F[%f%bssh%B%0F]%f%b'
+  zstyle ':myzshrc:prompt' overwrite-indicator '%4K%B%7F over %f%b%k'
+  zstyle ':myzshrc:prompt' jobs-indicator '%5K%B%7F %j job%(2j.s.) %f%b%k'
+  zstyle ':myzshrc:prompt' error-indicator '%1K%B%7F %? %f%b%k'
+  zstyle ':myzshrc:gitstatus' git-prefix '%B%1Fgit%f%b'
+  zstyle ':myzshrc:gitstatus' stash-count '%B%0F*'
+  zstyle ':myzshrc:gitstatus' staged-count '%B%2F+'
+  zstyle ':myzshrc:gitstatus' unstaged-count '%B%1F+'
+  zstyle ':myzshrc:gitstatus' untracked-count '%B%1F*'
+  zstyle ':myzshrc:gitstatus' commits-ahead '%6F%B↑'
+  zstyle ':myzshrc:gitstatus' commits-behind '%6F%B↓'
+  zstyle ':myzshrc:gitstatus' push-commits-ahead '%6F%B←'
+  zstyle ':myzshrc:gitstatus' push-commits-behind '%6F%B→'
+  zstyle ':myzshrc:gitstatus' action '%B%1F'
+  zstyle ':myzshrc:gitstatus' num-conflicted '%1F!%B'
   __ZSHRC__indicator_overwrite                      # Update the overwrite indicator if needed.
 }
 
@@ -626,13 +639,24 @@ __ZSHRC__simple_prompt() {
 __ZSHRC__fancy_prompt() {
   # For the main prompt.
   local userhost_color='%(!.#b24742.#47a730)'
-  zstyle ':myzshrc:prompt' before-userhost "%K{$userhost_color}%B%F{white} "
-  zstyle ':myzshrc:prompt' before-path '%b%F{'$userhost_color$'}%K{#547bb5}\uE0B4 %B%F{white}'
+  zstyle ':myzshrc:prompt' before-userhost "%K{$userhost_color}%B%7F "
+  zstyle ':myzshrc:prompt' before-path '%b%F{'$userhost_color$'}%K{#547bb5}\uE0B4 %B%7F'
   zstyle ':myzshrc:prompt' after-path '%b%F{#547bb5}%K{'$userhost_color$'}\uE0B4%k%F{'$userhost_color$'}\uE0B4%f '
-  zstyle ':myzshrc:prompt' ssh-indicator "%B%F{black}[%f%bssh%B%F{black}]%f%b"
-  zstyle ':myzshrc:prompt' overwrite-indicator $'%F{blue}\uE0B6%K{blue}%B%F{white}over%k%b%F{blue}\uE0B4%f'
-  zstyle ':myzshrc:prompt' jobs-indicator $'%F{magenta}\uE0B6%K{magenta}%B%F{white}%j job%(2j.s.)%k%b%F{magenta}\uE0B4%f'
-  zstyle ':myzshrc:prompt' error-indicator $'%F{red}\uE0B6%K{red}%B%F{white}%?%k%b%F{red}\uE0B4%f'
+  zstyle ':myzshrc:prompt' ssh-indicator '%B%0F[%f%bssh%B%0F]%f%b'
+  zstyle ':myzshrc:prompt' overwrite-indicator $'%4F\uE0B6%4K%B%7Fover%k%b%4F\uE0B4%f'
+  zstyle ':myzshrc:prompt' jobs-indicator $'%5F\uE0B6%5K%B%7F%j job%(2j.s.)%k%b%5F\uE0B4%f'
+  zstyle ':myzshrc:prompt' error-indicator $'%1F\uE0B6%1K%B%7F%?%k%b%1F\uE0B4%f'
+  zstyle ':myzshrc:gitstatus' git-prefix '%B%208Fgit%f%b'
+  zstyle ':myzshrc:gitstatus' stash-count '%B%0F'
+  zstyle ':myzshrc:gitstatus' staged-count '%106F%B%154F'
+  zstyle ':myzshrc:gitstatus' unstaged-count '%167F%B%210F'
+  zstyle ':myzshrc:gitstatus' untracked-count '%167F%B%210F'
+  zstyle ':myzshrc:gitstatus' commits-ahead '%36Fﰵ%B%86F'
+  zstyle ':myzshrc:gitstatus' commits-behind '%36Fﰬ%B%86F'
+  zstyle ':myzshrc:gitstatus' push-commits-ahead '%36Fﰯ%B%86F'
+  zstyle ':myzshrc:gitstatus' push-commits-behind '%36Fﰲ%B%86F'
+  zstyle ':myzshrc:gitstatus' action '%B%210F'
+  zstyle ':myzshrc:gitstatus' num-conflicted '%167F%B%210F'
   __ZSHRC__indicator_overwrite                      # Update the overwrite indicator if needed.
 }
 
