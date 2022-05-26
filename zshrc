@@ -476,7 +476,7 @@ myzshrc_prompt_precmd() {
   ((__ZSHRC__ssh_session)) && PS1=$ssh_indicator' ' || PS1=''
   PS1+="${before_userhost}%(!..%n@)%m${before_path}%~${after_path}"
 
-  RPROMPT="\${__ZSHRC__overwrite_prompt}%(1j.  $jobs_indicator.)%(0?..  $error_indicator)  "
+  RPROMPT="\${__ZSHRC__overwrite_prompt}%(1j.  $jobs_indicator.)%(0?..  $error_indicator)"
   RPROMPT+='${__ZSHRC__git_prompt}'
 }
 
