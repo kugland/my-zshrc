@@ -191,9 +191,7 @@ readonly __ZSHRC__ssh_session
 
 
 # [ DETECT PUTTY ]------------------------------------------------------------------------------- #
-# Some wild heuristic to detect if we're running under PuTTY.
-# One big problem here is that we are using a 0.5s timeout on the read command, so if the round
-# trip is longer than that, we will not detect it.
+# Some wild heuristics to detect if we're running under PuTTY.
 __ZSHRC__putty=0
 if ((__ZSHRC__ssh_session)) && [[ $TERM = xterm ]] {
   __ZSHRC__putty=1
@@ -203,7 +201,7 @@ if ((__ZSHRC__ssh_session)) && [[ $TERM = xterm ]] {
   ) {
     stty -echo
     print -n -- $challenge
-    read -r -d c -t 0.5 -s TERM_RESPONSE
+    read -r -d c -s TERM_RESPONSE
     stty echo
     [[ $TERM_RESPONSE != $response ]] \
       && __ZSHRC__putty=0 \
