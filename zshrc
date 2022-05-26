@@ -261,8 +261,10 @@ if [[ $TERM = rxvt* ]] {
   __ZSHRC__keys[CtrlRightArrow]=$'\eOc'
   __ZSHRC__keys[CtrlLeftArrow]=$'\eOd'
 } elif ((__ZSHRC__putty)) {
-  __ZSHRC__keys[CtrlPageUp]=$'\e\e[5~'              # This are actually Alt+PageUp.
-  __ZSHRC__keys[CtrlPageDown]=$'\e\e[6~'            # This are actually Alt+PageDown.
+  __ZSHRC__keys[Home]=$'\e[1~'
+  __ZSHRC__keys[End]=$'\e[4~'
+  __ZSHRC__keys[CtrlPageUp]=$'\e\e[5~'              # This is actually Alt+PageUp.
+  __ZSHRC__keys[CtrlPageDown]=$'\e\e[6~'            # This is actually Alt+PageDown.
   __ZSHRC__keys[CtrlDelete]=''                      # Sorry, no Ctrl+Delete.
   __ZSHRC__keys[RightArrow]=$'\eOC'
   __ZSHRC__keys[LeftArrow]=$'\eOD'
