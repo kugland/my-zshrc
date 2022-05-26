@@ -632,7 +632,7 @@ __ZSHRC__fancy_prompt() {
 # the simple prompt will be used.
 [[ $TTY = /dev/pts/* ]] \
   && [[ -n $DISPLAY ]] \
-  && [[ $LANG = *.UTF-8 ]] \
+  && [[ $LANG = *UTF-8* ]] \
   && ! ((__ZSHRC__ssh_session)) \
   && ((__ZSHRC__color8bit)) \
   && __ZSHRC__fancy_prompt || __ZSHRC__simple_prompt
