@@ -151,15 +151,6 @@ readonly __ZSHRC__color24bit __ZSHRC__color8bit
 # may vary; on $TERM = linux, for example, the resulting 256-color escapes will result in bright
 # white text.
 ! ((__ZSHRC__color24bit)) && is-at-least 5.7.0 $ZSH_VERSION && zmodload zsh/nearcolor
-
-# __ZSHRC__color prints its first argument if the terminal supports 256-color, otherwise it prints
-# its second argument. It's needed because there's no nearcolor equivalent for 4-bit color
-# terminals.
-if ((__ZSHRC__color8bit)) {
-  __ZSHRC__color() { print -n $2 }
-} else {
-  __ZSHRC__color() { print -n $1 }
-}
 # ----------------------------------------------------------------------------------------------- #
 
 
@@ -377,7 +368,7 @@ __ZSHRC__precmd_reset() {
     } else {
       print -n -- "\e%@"                            # Select default encoding.
     }
-    echoti smkx                                     # DECCKM/DECKPAM: Application mode.
+    ((${+terminfo[smkx]})) && echoti smkx           # DECCKM/DECKPAM: Application mode.
     print -n -- "\e\\"                              # String terminator.
   }
 }
@@ -385,7 +376,7 @@ __ZSHRC__precmd_reset() {
 add-zsh-hook precmd __ZSHRC__precmd_reset
 
 zle-line-finish() {
-  echoti rmkx                                       # Disable application mode
+  ((${+terminfo[rmkx]})) && echoti rmkx             # Disable application mode
 }
 
 zle -N zle-line-finish
@@ -455,7 +446,7 @@ add-zsh-hook preexec __ZSHRC__preexec_overwrite
 myzshrc_prompt_setup() {
   # PS2 will be '» ' for depth 1, '» » ' for depth 2, etc.
   # '»' is in ISO-8859-1, in CP437, in CP850, so it's probably safe to use it.
-  PS2='%B%F{black}%(1_.» .)%(2_.» .)%(3_.» .)%(4_.» .)%(5_.» .)%(6_.» .)%(7_.» .)%(8_.» .)%f%b'
+  PS2='%B%F{black}%(1_. .)%(2_.» .)%(3_.» .)%(4_.» .)%(5_.» .)%(6_.» .)%(7_.» .)%(8_.» .)%f%b'
   # RPS2 will be type of the current open block (if, while, for, etc.)
   # Make RPS2 show [cont] when we're in a continuation line (the previous line ended with '\').
   RPS2='%B%F{black}[%f%b${${${:-$(print -P "%^")}//(#s)cmdsubst #/}//(#s)(#e)/cont}%B%F{black}]%f%b'
@@ -473,11 +464,13 @@ myzshrc_prompt_precmd() {
   zstyle -s ':myzshrc:prompt' jobs-indicator jobs_indicator
   zstyle -s ':myzshrc:prompt' error-indicator error_indicator
 
-  ((__ZSHRC__ssh_session)) && PS1=$ssh_indicator' ' || PS1=''
+  local gitstatus_prompt
+  __ZSHRC__gitstatus_prompt_update
+
+  ((__ZSHRC__ssh_session)) && PS1=$ssh_indicator || PS1=''
   PS1+="${before_userhost}%(!..%n@)%m${before_path}%~${after_path}"
 
-  RPROMPT="\${__ZSHRC__overwrite_prompt}%(1j.  $jobs_indicator.)%(0?..  $error_indicator)"
-  RPROMPT+='${__ZSHRC__git_prompt}'
+  RPROMPT="\${__ZSHRC__overwrite_prompt}%(1j.  $jobs_indicator.)%(0?..  $error_indicator)$gitstatus_prompt"
 }
 
 add-zsh-hook precmd myzshrc_prompt_precmd
@@ -539,12 +532,12 @@ add-zsh-hook preexec __ZSHRC__preexec_window_title
 # Show git status in RPROMPT -------------------------------------------------------------------- #
 # On Arch Linux, install the gitstatus, gitstatus-bin or gitstatus-git packages from AUR.
 # For other distros, cf. https://github.com/romkatv/gitstatus.
-[[ -r /usr/share/gitstatus/gitstatus.plugin.zsh ]] && {
+if [[ -r /usr/share/gitstatus/gitstatus.plugin.zsh ]] {
   source /usr/share/gitstatus/gitstatus.plugin.zsh
 
   # Sets GITSTATUS_PROMPT to reflect the state of the current git repository.
   function __ZSHRC__gitstatus_prompt_update() {
-    __ZSHRC__git_prompt=''                          # Reset git status prompt.
+    gitstatus_prompt=''                             # Reset git status prompt.
 
     # Call gitstatus_query synchronously. Note that gitstatus_query can also be
     # called asynchronously; see documentation in gitstatus.plugin.zsh.
@@ -597,7 +590,7 @@ add-zsh-hook preexec __ZSHRC__preexec_window_title
     }
     [[ -n $VCS_STATUS_ACTION ]] && p+=" ${action}${VCS_STATUS_ACTION}%b%f"
 
-    __ZSHRC__git_prompt="${p}"
+    gitstatus_prompt="${p}"
   }
 
   # Start gitstatusd instance with name "MY". The same name is passed to gitstatus_query in
@@ -606,7 +599,11 @@ add-zsh-hook preexec __ZSHRC__preexec_window_title
   gitstatus_stop 'MY' && gitstatus_start -s -1 -u -1 -c -1 -d -1 'MY'
 
   # On every prompt, fetch git status and set GITSTATUS_PROMPT.
-  add-zsh-hook precmd __ZSHRC__gitstatus_prompt_update
+  #add-zsh-hook precmd __ZSHRC__gitstatus_prompt_update
+} else {
+  __ZSHRC__gitstatus_prompt_update() {
+    gitstatus_prompt=""
+  }
 }
 
 # Simple prompt and fancy prompt ---------------------------------------------------------------- #
@@ -616,7 +613,7 @@ __ZSHRC__simple_prompt() {
   zstyle ':myzshrc:prompt' before-userhost '%B%F{%(!.1.2)}'
   zstyle ':myzshrc:prompt' before-path '%f%b:%B%4F'
   zstyle ':myzshrc:prompt' after-path '%f%b%# '
-  zstyle ':myzshrc:prompt' ssh-indicator '%B%0F[%f%bssh%B%0F]%f%b'
+  zstyle ':myzshrc:prompt' ssh-indicator '%B%0F[%f%bssh%B%0F]%f%b '
   zstyle ':myzshrc:prompt' overwrite-indicator '%4K%B%7F over %f%b%k'
   zstyle ':myzshrc:prompt' jobs-indicator '%5K%B%7F %j job%(2j.s.) %f%b%k'
   zstyle ':myzshrc:prompt' error-indicator '%1K%B%7F %? %f%b%k'
@@ -642,11 +639,11 @@ __ZSHRC__fancy_prompt() {
   zstyle ':myzshrc:prompt' before-userhost "%K{$userhost_color}%B%7F "
   zstyle ':myzshrc:prompt' before-path '%b%F{'$userhost_color$'}%K{#547bb5}\uE0B4 %B%7F'
   zstyle ':myzshrc:prompt' after-path '%b%F{#547bb5}%K{'$userhost_color$'}\uE0B4%k%F{'$userhost_color$'}\uE0B4%f '
-  zstyle ':myzshrc:prompt' ssh-indicator '%B%0F[%f%bssh%B%0F]%f%b'
+  zstyle ':myzshrc:prompt' ssh-indicator $'%238K%15F ssh %K{'$userhost_color$'}'
   zstyle ':myzshrc:prompt' overwrite-indicator $'%4F\uE0B6%4K%B%7Fover%k%b%4F\uE0B4%f'
   zstyle ':myzshrc:prompt' jobs-indicator $'%5F\uE0B6%5K%B%7F%j job%(2j.s.)%k%b%5F\uE0B4%f'
   zstyle ':myzshrc:prompt' error-indicator $'%1F\uE0B6%1K%B%7F%?%k%b%1F\uE0B4%f'
-  zstyle ':myzshrc:gitstatus' git-prefix '%B%208Fgit%f%b'
+  zstyle ':myzshrc:gitstatus' git-prefix '%B%208F%f%b'
   zstyle ':myzshrc:gitstatus' stash-count '%B%0F'
   zstyle ':myzshrc:gitstatus' staged-count '%106F%B%154F'
   zstyle ':myzshrc:gitstatus' unstaged-count '%167F%B%210F'
