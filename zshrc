@@ -446,7 +446,7 @@ add-zsh-hook preexec __ZSHRC__preexec_overwrite
 myzshrc_prompt_setup() {
   # PS2 will be '» ' for depth 1, '» » ' for depth 2, etc.
   # '»' is in ISO-8859-1, in CP437, in CP850, so it's probably safe to use it.
-  PS2='%B%F{black}%(1_. .)%(2_.» .)%(3_.» .)%(4_.» .)%(5_.» .)%(6_.» .)%(7_.» .)%(8_.» .)%f%b'
+  PS2='%B%F{black}%(1_.» .)%(2_.» .)%(3_.» .)%(4_.» .)%(5_.» .)%(6_.» .)%(7_.» .)%(8_.» .)%f%b'
   # RPS2 will be type of the current open block (if, while, for, etc.)
   # Make RPS2 show [cont] when we're in a continuation line (the previous line ended with '\').
   RPS2='%B%F{black}[%f%b${${${:-$(print -P "%^")}//(#s)cmdsubst #/}//(#s)(#e)/cont}%B%F{black}]%f%b'
@@ -614,9 +614,9 @@ __ZSHRC__simple_prompt() {
   zstyle ':myzshrc:prompt' before-path '%f%b:%B%4F'
   zstyle ':myzshrc:prompt' after-path '%f%b%# '
   zstyle ':myzshrc:prompt' ssh-indicator '%B%0F[%f%bssh%B%0F]%f%b '
-  zstyle ':myzshrc:prompt' overwrite-indicator '%4K%B%7F over %f%b%k'
-  zstyle ':myzshrc:prompt' jobs-indicator '%5K%B%7F %j job%(2j.s.) %f%b%k'
-  zstyle ':myzshrc:prompt' error-indicator '%1K%B%7F %? %f%b%k'
+  zstyle ':myzshrc:prompt' overwrite-indicator '%K{4}%B%7F over %f%b%k'
+  zstyle ':myzshrc:prompt' jobs-indicator '%K{5}%B%7F %j job%(2j.s.) %f%b%k'
+  zstyle ':myzshrc:prompt' error-indicator '%K{1}%B%7F %? %f%b%k'
   zstyle ':myzshrc:gitstatus' git-prefix '%B%1Fgit%f%b'
   zstyle ':myzshrc:gitstatus' stash-count '%B%0F*'
   zstyle ':myzshrc:gitstatus' staged-count '%B%2F+'
@@ -639,10 +639,10 @@ __ZSHRC__fancy_prompt() {
   zstyle ':myzshrc:prompt' before-userhost "%K{$userhost_color}%B%7F "
   zstyle ':myzshrc:prompt' before-path '%b%F{'$userhost_color$'}%K{#547bb5}\uE0B4 %B%7F'
   zstyle ':myzshrc:prompt' after-path '%b%F{#547bb5}%K{'$userhost_color$'}\uE0B4%k%F{'$userhost_color$'}\uE0B4%f '
-  zstyle ':myzshrc:prompt' ssh-indicator $'%238K%15F ssh %K{'$userhost_color$'}'
-  zstyle ':myzshrc:prompt' overwrite-indicator $'%4F\uE0B6%4K%B%7Fover%k%b%4F\uE0B4%f'
-  zstyle ':myzshrc:prompt' jobs-indicator $'%5F\uE0B6%5K%B%7F%j job%(2j.s.)%k%b%5F\uE0B4%f'
-  zstyle ':myzshrc:prompt' error-indicator $'%1F\uE0B6%1K%B%7F%?%k%b%1F\uE0B4%f'
+  zstyle ':myzshrc:prompt' ssh-indicator $'%K{238}%15F ssh %K{'$userhost_color$'}'
+  zstyle ':myzshrc:prompt' overwrite-indicator $'%4F\uE0B6%K{4}%B%7Fover%k%b%4F\uE0B4%f'
+  zstyle ':myzshrc:prompt' jobs-indicator $'%5F\uE0B6%K{5}%B%7F%j job%(2j.s.)%k%b%5F\uE0B4%f'
+  zstyle ':myzshrc:prompt' error-indicator $'%1F\uE0B6%K{1}%B%7F%?%k%b%1F\uE0B4%f'
   zstyle ':myzshrc:gitstatus' git-prefix '%B%208F%f%b'
   zstyle ':myzshrc:gitstatus' stash-count '%B%0F'
   zstyle ':myzshrc:gitstatus' staged-count '%106F%B%154F'
