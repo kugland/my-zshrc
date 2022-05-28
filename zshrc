@@ -742,7 +742,7 @@ add-zsh-hook zshexit __ZSHRC__zshexit_exit_message
 #   --time-style=long-iso: show times in long ISO format (e.g. 2017-01-01 12:00)
 alias ls='command ls -h --color=auto --indicator-style=slash --time-style=long-iso'
 
-for grep ({,e,f}grep bzgrep {,l,x}z{,e,f}grep) {    # Add colors to grep and friends.
+for grep ({{,bz,lz,zstd,xz}{,e,f},pcre{,2}}grep) {  # Add colors to grep and friends.
   [[ -n ${commands[$grep]} ]] && alias "$grep=command $grep --color=auto"
 }
 
