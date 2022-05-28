@@ -438,9 +438,6 @@ add-zsh-hook preexec __ZSHRC__preexec_overwrite
 # That's the way I like it.
 
 myzshrc_prompt_setup() {
-  # PS2 will be '» ' for depth 1, '» » ' for depth 2, etc.
-  # '»' is in ISO-8859-1, in CP437, in CP850, so it's probably safe to use it.
-  # PS2='%B%F{black}%(1_.» .)%(2_.» .)%(3_.» .)%(4_.» .)%(5_.» .)%(6_.» .)%(7_.» .)%(8_.» .)%f%b'
   # RPS2 will be type of the current open block (if, while, for, etc.)
   # Make RPS2 show [cont] when we're in a continuation line (the previous line ended with '\').
   RPS2='%B%F{black}[%f%b${${${:-$(print -P "%^")}//(#s)cmdsubst #/}//(#s)(#e)/cont}%B%F{black}]%f%b'
