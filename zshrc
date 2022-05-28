@@ -18,9 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-# Set emulation mode to 'zsh'.
-emulate -R zsh
-
 # [ LOAD FUNCTIONS AND MODULES ]----------------------------------------------------------------- #
 zmodload zsh/parameter
 zmodload -F zsh/stat b:zstat
@@ -34,43 +31,47 @@ export EDITOR=vim                                   # Use vim as the default edi
 export GPG_TTY=$TTY                                 # Set the TTY for GPG pinentry.
 
 # Paths ----------------------------------------------------------------------------------------- #
-path=()                                             # Clear the path.
-for dir (                                           # Add some sane defaults to the PATH:
-  /{usr/{local/,},}{s,}bin                          # s?bin directories under /usr/local, /usr & /
-  /usr/{,local/}games                               # games directories under /usr & /usr/local
-  /snap/bin                                         # snap binaries
-) {
-  [[ -h $dir ]] && continue                         # Skip symlinks.
-  [[ -d $dir ]] || continue                         # Skip non-directories.
-  [[ $(zstat +uid $dir) = 0 ]] || continue          # Skip non-root-owned directories.
-  [[ $(zstat +gid $dir) = 0 ]] || continue          # Skip non-root-owned directories.
-  local perm=$(zstat +mode $dir)                    # Skip directories that have set[ug]id set, or
-  (((perm & 3647) == 45)) || continue               # sticky bits, or that are group or world-
-                                                    # writable.
-  path+=($dir)                                      # Add directory to the path.
+() {
+  typeset -gxUT PATH path ':'; path=()
+  typeset -gxUT LD_LIBRARY_PATH ld_library_path ':'; ld_library_path=()
+
+  append_path() {
+    local var=$1
+    shift
+    for dir ($@) {
+      [[ ! -e $dir || -h $dir ]] && continue        # Skip if it doesn't exist or it is a symlink.
+      (($(zstat +mode $dir) != 16877)) && continue  # Skip if mode is not 40775.
+      (($(zstat +uid $dir) != 0)) && continue       # Skip if owner is not root.
+      (($(zstat +gid $dir) != 0)) && continue       # Skip if group is not root.
+      eval ${var}+='( $dir )'                       # Add directory to the path.
+    }
+  }
+
+  append_path path /{usr/{local/,},}{s,}bin
+  append_path path /usr/{,local/}games
+  append_path path /snap/bin
+
+  append_path ld_library_path /{usr/{local/,},}lib{,64,32}
 }
 
 # Dynamic linker -------------------------------------------------------------------------------- #
-export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib      # Set the default library path.
-export LD_PRELOAD=''                                # Disable LD_PRELOAD.
-export LD_AUDIT=''                                  # Disable LD_AUDIT.
-export LD_DYNAMIC_WEAK=0                            # Do not allow weak symbols to be overridden.
-export LD_POINTER_GUARD=1                           # Enable pointer guard.
-readonly LD_{LIBRARY_PATH,PRELOAD,AUDIT,DYNAMIC_WEAK,POINTER_GUARD} # Make variables readonly.
+typeset -gxr LD_PRELOAD=''                          # Disable LD_PRELOAD.
+typeset -gtx LD_AUDIT=''                            # Disable LD_AUDIT.
+typeset -gtx LD_DYNAMIC_WEAK=0                      # Do not allow weak symbols to be overridden.
+typeset -gtx LD_POINTER_GUARD=1                     # Enable pointer guard.
 # ----------------------------------------------------------------------------------------------- #
 
 
 # [ LOAD SCRIPTS FROM /ETC/PROFILE.D ]----------------------------------------------------------- #
 append_path() {                                     # Append a path to the PATH variable.
   emulate -L zsh                                    # This function will be available for scripts
-  ((path[(Ie)$1])) && return || path+=($1)          # in /etc/profile.d.
+  path+=($1)                                        # in /etc/profile.d.
 }
 setopt null_glob
 for script (/etc/profile.d/*.sh) {
   [[ -x "$script" ]] && emulate bash -c "source $script"  # Source script using bash emulation.
 }
 setopt no_null_glob
-unset -f append_path
 # ----------------------------------------------------------------------------------------------- #
 
 
@@ -155,14 +156,12 @@ readonly __ZSHRC__color24bit __ZSHRC__color8bit
 
 
 # [ DETECT SSH SESSIONS ]------------------------------------------------------------------------ #
-# First we try the easy way: if SSH_CONNECTION is set, we're running under SSH.
+# First try the easy way: if SSH_CONNECTION is set, we're running under SSH.
 __ZSHRC__ssh_session=${${SSH_CONNECTION:+1}:-0}
 
-# However, if SSH_CONNECTION is not set, then it might be because we're running under sudo, and the
-# environment variable wasn't passed by su(do)?. But we can still check whether we have sshd as an
-# ancestor process. This will fail for normal users if /proc was mounted with hidepid=2. So this
-# will fail if, while having hidepid=2, the user has su(do)'ed as root, and then again su(do)'ed
-# as a normal user.
+# If SSH_CONNECTION is not set, then we might be running under sudo, so we check whether we have
+# sshd as an ancestor process. This will fail for non-root users if /proc was mounted with
+# hidepid=2.
 if ! ((__ZSHRC__ssh_session)) {
   __ZSHRC__is_sshd_my_ancestor() {
     local IFS=' '                                   # This is needed to split /proc/<pid>/stat.
@@ -206,14 +205,9 @@ readonly __ZSHRC__putty
 # ----------------------------------------------------------------------------------------------- #
 
 
-# [ INACTIVITY TIMEOUT ]------------------------------------------------------------------------- #
-# When not running on a virtual terminal, timeout after 10 minutes of inactivity.
-if [[ $TTY != /dev/pts/* ]] { TMOUT=$((10 * 60)) }
-# ----------------------------------------------------------------------------------------------- #
-
-
 # [ LOAD LS COLORS ]----------------------------------------------------------------------------- #
 # Load colors from ~/.dir_colors or /etc/DIR_COLORS, or use the default colors if they don't exist.
+typeset -gxUT LS_COLORS ls_colors ':'
 eval $(
   [[ -f ~/.dir_colors ]] && dircolors -b ~/.dir_colors && return
   [[ -f /etc/DIR_COLORS ]] && dircolors -b /etc/DIR_COLORS && return
@@ -446,7 +440,7 @@ add-zsh-hook preexec __ZSHRC__preexec_overwrite
 myzshrc_prompt_setup() {
   # PS2 will be '» ' for depth 1, '» » ' for depth 2, etc.
   # '»' is in ISO-8859-1, in CP437, in CP850, so it's probably safe to use it.
-  PS2='%B%F{black}%(1_.» .)%(2_.» .)%(3_.» .)%(4_.» .)%(5_.» .)%(6_.» .)%(7_.» .)%(8_.» .)%f%b'
+  # PS2='%B%F{black}%(1_.» .)%(2_.» .)%(3_.» .)%(4_.» .)%(5_.» .)%(6_.» .)%(7_.» .)%(8_.» .)%f%b'
   # RPS2 will be type of the current open block (if, while, for, etc.)
   # Make RPS2 show [cont] when we're in a continuation line (the previous line ended with '\').
   RPS2='%B%F{black}[%f%b${${${:-$(print -P "%^")}//(#s)cmdsubst #/}//(#s)(#e)/cont}%B%F{black}]%f%b'
@@ -454,7 +448,8 @@ myzshrc_prompt_setup() {
 
 myzshrc_prompt_precmd() {
   local before_userhost before_path after_path \
-        ssh_indicator overwrite_indicator jobs_indicator error_indicator
+        ssh_indicator overwrite_indicator jobs_indicator error_indicator \
+        continuation gitstatus_prompt
 
   zstyle -s ':myzshrc:prompt' before-userhost before_userhost
   zstyle -s ':myzshrc:prompt' before-path before_path
@@ -463,14 +458,16 @@ myzshrc_prompt_precmd() {
   zstyle -s ':myzshrc:prompt' overwrite-indicator overwrite_indicator
   zstyle -s ':myzshrc:prompt' jobs-indicator jobs_indicator
   zstyle -s ':myzshrc:prompt' error-indicator error_indicator
+  zstyle -s ':myzshrc:prompt' continuation continuation
 
-  local gitstatus_prompt
   __ZSHRC__gitstatus_prompt_update
 
   ((__ZSHRC__ssh_session)) && PS1=$ssh_indicator || PS1=''
   PS1+="${before_userhost}%(!..%n@)%m${before_path}%~${after_path}"
 
   RPROMPT="\${__ZSHRC__overwrite_prompt}%(1j.  $jobs_indicator.)%(0?..  $error_indicator)$gitstatus_prompt"
+
+  PS2=''; for level ({1..16}) { PS2+="%(${level}_.${continuation}.)" }; PS2+=' '
 }
 
 add-zsh-hook precmd myzshrc_prompt_precmd
@@ -617,6 +614,7 @@ __ZSHRC__simple_prompt() {
   zstyle ':myzshrc:prompt' overwrite-indicator '%K{4}%B%7F over %f%b%k'
   zstyle ':myzshrc:prompt' jobs-indicator '%K{5}%B%7F %j job%(2j.s.) %f%b%k'
   zstyle ':myzshrc:prompt' error-indicator '%K{1}%B%7F %? %f%b%k'
+  zstyle ':myzshrc:prompt' continuation '%B%0F» %f%b'
   zstyle ':myzshrc:gitstatus' git-prefix '%B%1Fgit%f%b'
   zstyle ':myzshrc:gitstatus' stash-count '%B%0F*'
   zstyle ':myzshrc:gitstatus' staged-count '%B%2F+'
@@ -643,11 +641,12 @@ __ZSHRC__fancy_prompt() {
   zstyle ':myzshrc:prompt' overwrite-indicator $'%4F\uE0B6%K{4}%B%7Fover%k%b%4F\uE0B4%f'
   zstyle ':myzshrc:prompt' jobs-indicator $'%5F\uE0B6%K{5}%B%7F%j job%(2j.s.)%k%b%5F\uE0B4%f'
   zstyle ':myzshrc:prompt' error-indicator $'%1F\uE0B6%K{1}%B%7F%?%k%b%1F\uE0B4%f'
+  zstyle ':myzshrc:prompt' continuation $'%B%0F\uf054%f%b'
   zstyle ':myzshrc:gitstatus' git-prefix '%B%208F%f%b'
-  zstyle ':myzshrc:gitstatus' stash-count '%B%0F'
+  zstyle ':myzshrc:gitstatus' stash-count $'%245F\uf4a6%B%250F'
   zstyle ':myzshrc:gitstatus' staged-count '%106F%B%154F'
   zstyle ':myzshrc:gitstatus' unstaged-count '%167F%B%210F'
-  zstyle ':myzshrc:gitstatus' untracked-count '%167F%B%210F'
+  zstyle ':myzshrc:gitstatus' untracked-count $'%167F\uf005%B%210F'
   zstyle ':myzshrc:gitstatus' commits-ahead '%36Fﰵ%B%86F'
   zstyle ':myzshrc:gitstatus' commits-behind '%36Fﰬ%B%86F'
   zstyle ':myzshrc:gitstatus' push-commits-ahead '%36Fﰯ%B%86F'
@@ -678,7 +677,7 @@ zstyle ':completion:*' completer _complete _prefix
 zstyle ':completion:*' add-space true
 zstyle ':completion:*:*:*:*:*' menu select
 zstyle ":completion:*:commands" rehash 1
-zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
+zstyle ':completion:*:default' list-colors $ls_colors
 zstyle ':completion:*:warnings' format '%B%F{red}No matches for %d.%f%b'
 zstyle ':completion:*:matches' group 'yes'
 zstyle ':completion:*:descriptions' format '%B%K{cyan}%F{white}  %d  %f%k%b'
@@ -695,26 +694,27 @@ zstyle ':completion:*:processes-names' list-colors '=*=01;32'
 
 # ssh, scp, sftp and sshfs -----------------------------------------------------------------------#
 # Load ssh hosts from ~/.ssh/config
-__ZSHRC__ssh_hosts=()
-if [[ -r ~/.ssh/config ]] {
-  __ZSHRC__ssh_hosts=(${${${(@M)${(f)"$(<~/.ssh/config)"}:#Host *}#Host }:#*[*?]*}) 2>/dev/null
-  __ZSHRC__ssh_hosts=(${(s/ /)${__ZSHRC__ssh_hosts}})
-  if ((${#__ZSHRC__ssh_hosts})) {
-    zstyle ':completion:*:scp:*' hosts $__ZSHRC__ssh_hosts
-    zstyle ':completion:*:sftp:*' hosts $__ZSHRC__ssh_hosts
-    zstyle ':completion:*:ssh:*' hosts $__ZSHRC__ssh_hosts
-    zstyle ':completion:*:sshfs:*' hosts $__ZSHRC__ssh_hosts
+() {
+  local -a ssh_hosts=()
+  if [[ -r ~/.ssh/config ]] {
+    ssh_hosts=(${${${(@M)${(f)"$(<~/.ssh/config)"}:#Host *}#Host }:#*[*?]*}) 2>/dev/null
+    ssh_hosts=(${(s/ /)${ssh_hosts}})
+    if (( ${#ssh_hosts} )) {
+      zstyle ':completion:*:scp:*' hosts $ssh_hosts
+      zstyle ':completion:*:sftp:*' hosts $ssh_hosts
+      zstyle ':completion:*:ssh:*' hosts $ssh_hosts
+      zstyle ':completion:*:sshfs:*' hosts $ssh_hosts
+    }
   }
+  zstyle ':completion:*:scp:*' users
+  zstyle ':completion:*:sftp:*' users
+  zstyle ':completion:*:ssh:*' users
+  zstyle ':completion:*:sshfs:*' users
+  # Workaround for sshfs
+  [[ -n ${commands[sshfs]} ]] && function() _user_at_host() { _ssh_hosts "$@" }
+  # Don't complete hosts from /etc/hosts
+  zstyle -e ':completion:*' hosts 'reply=()'
 }
-unset __ZSHRC__ssh_hosts
-zstyle ':completion:*:scp:*' users
-zstyle ':completion:*:sftp:*' users
-zstyle ':completion:*:ssh:*' users
-zstyle ':completion:*:sshfs:*' users
-# Workaround for sshfs
-[[ -n ${commands[sshfs]} ]] && function() _user_at_host() { _ssh_hosts "$@" }
-# Don't complete hosts from /etc/hosts
-zstyle -e ':completion:*' hosts 'reply=()'
 
 # Hide entries from completion ------------------------------------------------------------------ #
 zstyle ':completion:*:parameters' ignored-patterns \
@@ -765,10 +765,4 @@ for plugin (
   && __ZSHRC__bindkeys CtrlPageUp history-substring-search-up
 ((${+functions[history-substring-search-down]})) \
   && __ZSHRC__bindkeys CtrlPageDown history-substring-search-down
-# ----------------------------------------------------------------------------------------------- #
-
-
-# Some cleanup ---------------------------------------------------------------------------------- #
-unset __ZSHRC__keys
-unset -f __ZSHRC__bindkeys
 # ----------------------------------------------------------------------------------------------- #
