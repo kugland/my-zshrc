@@ -446,7 +446,7 @@ myzshrc_prompt_setup() {
 myzshrc_prompt_precmd() {
   local before_userhost before_path after_path \
         ssh_indicator overwrite_indicator jobs_indicator error_indicator \
-        continuation gitstatus_prompt
+        continuation eol_mark gitstatus_prompt
 
   zstyle -s ':myzshrc:prompt' before-userhost before_userhost
   zstyle -s ':myzshrc:prompt' before-path before_path
@@ -456,6 +456,7 @@ myzshrc_prompt_precmd() {
   zstyle -s ':myzshrc:prompt' jobs-indicator jobs_indicator
   zstyle -s ':myzshrc:prompt' error-indicator error_indicator
   zstyle -s ':myzshrc:prompt' continuation continuation
+  zstyle -s ':myzshrc:prompt' eol-mark eol_mark
 
   __ZSHRC__gitstatus_prompt_update
 
@@ -465,6 +466,8 @@ myzshrc_prompt_precmd() {
   RPROMPT="\${__ZSHRC__overwrite_prompt}%(1j.  $jobs_indicator.)%(0?..  $error_indicator)$gitstatus_prompt"
 
   PS2=''; for level ({1..16}) { PS2+="%(${level}_.${continuation}.)" }; PS2+=' '
+
+  PROMPT_EOL_MARK=${eol_mark}
 }
 
 add-zsh-hook precmd myzshrc_prompt_precmd
@@ -612,6 +615,7 @@ __ZSHRC__simple_prompt() {
   zstyle ':myzshrc:prompt' jobs-indicator '%K{5}%B%7F %j job%(2j.s.) %f%b%k'
   zstyle ':myzshrc:prompt' error-indicator '%K{1}%B%7F %? %f%b%k'
   zstyle ':myzshrc:prompt' continuation '%B%0F» %f%b'
+  zstyle ':myzshrc:prompt' eol-mark '%B%0F·%f%b'
   zstyle ':myzshrc:gitstatus' git-prefix '%B%1Fgit%f%b'
   zstyle ':myzshrc:gitstatus' stash-count '%B%0F*'
   zstyle ':myzshrc:gitstatus' staged-count '%B%2F+'
@@ -639,6 +643,7 @@ __ZSHRC__fancy_prompt() {
   zstyle ':myzshrc:prompt' jobs-indicator $'%5F\uE0B6%K{5}%B%7F%j job%(2j.s.)%k%b%5F\uE0B4%f'
   zstyle ':myzshrc:prompt' error-indicator $'%1F\uE0B6%K{1}%B%7F%?%k%b%1F\uE0B4%f'
   zstyle ':myzshrc:prompt' continuation $'%B%0F\uf054%f%b'
+  zstyle ':myzshrc:prompt' eol-mark '%B%0Fﱢ%b%f'
   zstyle ':myzshrc:gitstatus' git-prefix '%B%208F%f%b'
   zstyle ':myzshrc:gitstatus' stash-count $'%245F\uf4a6%B%250F'
   zstyle ':myzshrc:gitstatus' staged-count '%106F%B%154F'
