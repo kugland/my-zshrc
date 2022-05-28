@@ -741,9 +741,11 @@ add-zsh-hook zshexit __ZSHRC__zshexit_exit_message
 #   --indicator-style=slash: use a slash to indicate directories
 #   --time-style=long-iso: show times in long ISO format (e.g. 2017-01-01 12:00)
 alias ls='command ls -h --color=auto --indicator-style=slash --time-style=long-iso'
-
-for grep ({{,bz,lz,zstd,xz}{,e,f},pcre{,2}}grep) {  # Add colors to grep and friends.
-  [[ -n ${commands[$grep]} ]] && alias "$grep=command $grep --color=auto"
+() {
+  local g
+  for g ({{,bz,lz,zstd,xz}{,e,f},pcre{,2}}grep) {   # Add colors to grep and friends.
+    [[ -n ${commands[$g]} ]] && alias "$g=command $g --color=auto"
+  }
 }
 
 alias diff='command diff --color=auto'              # Add colors to diff command.
