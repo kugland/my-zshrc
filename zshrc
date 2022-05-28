@@ -383,10 +383,10 @@ __ZSHRC__overwrite_prompt=''                        # Overwrite mode indicator f
 __ZSHRC__cursorshape_overwrite() {
   if ((__ZSHRC__overwrite_state)) {                 # In overwrite mode:
     print -n $'\e[?6c'                              # █ cursor on $TERM = linux
-    print -n $'\e[3 q'                              # | cursor on xterm and compatible
+    print -n $'\e[3 q'                              # _ cursor on xterm and compatible
   } else {                                          # In insert mode:
     print -n $'\e[?2c'                              # _ cursor on $TERM = linux
-    print -n $'\e[5 q'                              # │ cursor on xterm and compatible
+    print -n $'\e[5 q'                              # | cursor on xterm and compatible
   }
 }
 
