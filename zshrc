@@ -340,34 +340,31 @@ if [[ $TERM != linux ]] {
 }
 
 # Reset ----------------------------------------------------------------------------------------- #
-__ZSHRC__precmd_reset() {
-  if [[ -t 0 ]] {
-    stty sane -imaxbel -brkint ixoff                # Reset terminal settings.
-    for code (
-      "\e<\e\\"                                     # Disable VT52 mode.
-      "\e[!p"                                       # Soft reset.
-      "\x0f"                                        # Switch to G0 charset.
-      "\e[3l"                                       # DECCRM: Don't show control characters.
-      "\e[20l"                                      # LF/NL: Do not add CR after LF, VT and FF.
-      "\e[?5l"                                      # DECSCNM: Disable reverse video.
-      "\e[?8h"                                      # DECARM: Enable keyboard auto-repeat.
-      "\e[?"{9,100{0..6},101{5,6}}"l"               # Disable xterm mouse and focus events.
-      "\e[?2004h"                                   # Enable bracketed paste.
-    ) {
-      print -n -- $code
-    }
-    if [[ $LANG = *UTF-8* ]] {
-      stty iutf8                                    # Assume input characters are UTF-8 encoded.
-      print -n -- "\e%G"                            # Select UTF-8 encoding.
-    } else {
-      print -n -- "\e%@"                            # Select default encoding.
-    }
-    ((${+terminfo[smkx]})) && echoti smkx           # DECCKM/DECKPAM: Application mode.
-    print -n -- "\e\\"                              # String terminator.
+__ZSHRC__reset_terminal() {
+  #[[ -t 0 && -t 1 ]] || return                      # Do nothing if not a tty.
+  stty sane -imaxbel -brkint ixoff iutf8            # Reset terminal settings.
+  print -nr $'\e<'                                  # Exit VT52 mode.
+  print -nr $'\e7\e[?1049l\e8'                      # Use main screen buffer.
+  print -nr $'\e7\e[0;0r\e8'                        # DECSTBM: unset top/bottom margins.
+  print -nr $'\e(B\e)B'                             # SCS: set G0 and G1 charsets to US-ASCII.
+  [[ $TERM != linux ]] && print -nr $'\e*A\e+A'     # SCS: set G2 and G3 charsets to Latin-1.
+  print -nr $'\Co'                                  # Invoke G0 charset as GL
+  print -nr $'\e~'                                  # Invoke G1 charset as GR.
+  print -nr $'\e%G'                                 # Enable UTF-8 mode.
+  print -nr $'\e#5'                                 # DECSWL: single-width line.
+  print -nr $'\e[3l'                                # DECCRM: don't show control characters.
+  print -nr $'\e[20l'                               # LNM: disable automatic new lines.
+  print -nr $'\e[?5l'                               # DECSCNM: disable reverse video.
+  print -nr $'\e7\e[?6l\e8'                         # DECOM: disable origin mode.
+  print -nr $'\e[?7h'                               # DECAWM: enable auto-wrap mode.
+  print -nr $'\e[?8h'                               # DECARM: enable auto-repeat keys.
+  print -nr $'\e[?25h'                              # DECTCEM: make cursor visible.
+  print -nr $'\e[?2004h'                            # Enable bracketed paste.
+  for s ($'\e[?'{9,100{0..6},101{5,6}}'l') {
+    print -nr $s                                    # Disable xterm mouse and focus events.
   }
+  print -nr ${terminfo[smkx]}                       # DECCKM & DECKPAM: use application mode.
 }
-
-add-zsh-hook precmd __ZSHRC__precmd_reset
 
 zle-line-finish() {
   ((${+terminfo[rmkx]})) && echoti rmkx             # Disable application mode
@@ -437,13 +434,9 @@ add-zsh-hook preexec __ZSHRC__preexec_overwrite
 # [ PROMPT SETUP ]------------------------------------------------------------------------------- #
 # That's the way I like it.
 
-myzshrc_prompt_setup() {
-  # RPS2 will be type of the current open block (if, while, for, etc.)
-  # Make RPS2 show [cont] when we're in a continuation line (the previous line ended with '\').
-  RPS2='%B%F{black}[%f%b${${${:-$(print -P "%^")}//(#s)cmdsubst #/}//(#s)(#e)/cont}%B%F{black}]%f%b'
-}
-
 myzshrc_prompt_precmd() {
+  __ZSHRC__reset_terminal
+
   local before_userhost before_path after_path \
         ssh_indicator overwrite_indicator jobs_indicator error_indicator \
         continuation eol_mark gitstatus_prompt
@@ -467,12 +460,14 @@ myzshrc_prompt_precmd() {
 
   PS2=''; for level ({1..16}) { PS2+="%(${level}_.${continuation}.)" }; PS2+=' '
 
+  # RPS2 will be type of the current open block (if, while, for, etc.)
+  # Make RPS2 show [cont] when we're in a continuation line (the previous line ended with '\').
+  RPS2='%B%F{black}[%f%b${${${:-$(print -P "%^")}//(#s)cmdsubst #/}//(#s)(#e)/cont}%B%F{black}]%f%b'
+
   PROMPT_EOL_MARK=${eol_mark}
 }
 
 add-zsh-hook precmd myzshrc_prompt_precmd
-
-myzshrc_prompt_setup
 
 # Window title ---------------------------------------------------------------------------------- #
 __ZSHRC__ellipsized_path_window_title() {
