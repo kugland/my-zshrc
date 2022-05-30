@@ -341,7 +341,6 @@ if [[ $TERM != linux ]] {
 
 # Reset ----------------------------------------------------------------------------------------- #
 __ZSHRC__reset_terminal() {
-  #[[ -t 0 && -t 1 ]] || return                      # Do nothing if not a tty.
   stty sane -imaxbel -brkint ixoff iutf8            # Reset terminal settings.
   print -nr $'\e<'                                  # Exit VT52 mode.
   print -nr $'\e7\e[?1049l\e8'                      # Use main screen buffer.
