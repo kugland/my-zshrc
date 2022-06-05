@@ -143,7 +143,7 @@ readonly HISTSIZE SAVEHIST HISTFILE                 # Make the variables readonl
 # We'll assume that the terminal supports at least 4-bit colors, so we should detect support for
 # 8 and 24-bit color. I believe it's also reasonable to assume that a terminal that supports 24-bit
 # color will also support 256-color.
-[[ $COLORTERM = (24bit|truecolor) ]]; ((?)); __ZSHRC__color24bit=$?  # ((?)) means $? = $? ? 0 : 1
+[[ $COLORTERM = (24bit|truecolor) ]]; __ZSHRC__color24bit=$(( ! $? ))
 ((__ZSHRC__color24bit)) || [[ $TERM = *256color* ]]; ((?)); __ZSHRC__color8bit=$?
 readonly __ZSHRC__color24bit __ZSHRC__color8bit
 
