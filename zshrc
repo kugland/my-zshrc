@@ -238,7 +238,7 @@ __ZSHRC__reset_terminal() {
       8 555753  9 ef2929  A 8ae234  B fce94f        # Bri black, bri red, bri green, bri yellow
       C 729fcf  D ad7fa8  E 34e2e2  F ffffff        # Bri blue, bri magenta, bri cyan, bri white
     ) {
-      print -rn -- $'\e]'"${idx}${rgb}"$'\e\\'
+      print -nr -- $'\e]P'"${idx}${rgb}"$'\e\\'
     }
   }
 }
