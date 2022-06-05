@@ -764,3 +764,6 @@ for plugin (
 ((${+functions[history-substring-search-down]})) \
   && __ZSHRC__bindkeys CtrlPageDown history-substring-search-down
 # ----------------------------------------------------------------------------------------------- #
+
+
+((1))                                               # All's well that ends well
