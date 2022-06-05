@@ -184,8 +184,9 @@ readonly __ZSHRC__ssh_session
 
 # [ DETECT PUTTY ]------------------------------------------------------------------------------- #
 # Some wild heuristics to detect if we're running under PuTTY.
-__ZSHRC__putty=0
-if ((__ZSHRC__ssh_session)) && [[ $TERM = xterm ]] {
+[[ $TERM = putty* ]]; __ZSHRC__putty=(( ! $? ))
+
+if (( ! __ZSHRC__putty || __ZSHRC__ssh_session )) && [[ $TERM = xterm* ]] {
   __ZSHRC__putty=1
   for challenge response (
     $'\eZ' $'\e[?6'                                 # DECID: terminal type query.
