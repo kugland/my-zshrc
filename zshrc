@@ -206,6 +206,45 @@ readonly __ZSHRC__putty
 # ----------------------------------------------------------------------------------------------- #
 
 
+# [ SEQUENCE TO RESET TERMINAL ]----------------------------------------------------------------- #
+__ZSHRC__reset_terminal() {
+  stty sane -imaxbel -brkint ixoff iutf8            # Reset terminal settings.
+  print -nr $'\e<'                                  # Exit VT52 mode.
+  print -nr $'\e7\e[?1049l\e8'                      # Use main screen buffer.
+  print -nr $'\e7\e[0;0r\e8'                        # DECSTBM: unset top/bottom margins.
+  print -nr $'\e(B\e)B'                             # SCS: set G0 and G1 charsets to US-ASCII.
+  [[ $TERM != linux ]] && print -nr $'\e*A\e+A'     # SCS: set G2 and G3 charsets to Latin-1.
+  print -nr $'\Co'                                  # Invoke G0 charset as GL
+  print -nr $'\e~'                                  # Invoke G1 charset as GR.
+  print -nr $'\e%G'                                 # Enable UTF-8 mode.
+  print -nr $'\e#5'                                 # DECSWL: single-width line.
+  print -nr $'\e[3l'                                # DECCRM: don't show control characters.
+  print -nr $'\e[20l'                               # LNM: disable automatic new lines.
+  print -nr $'\e[?5l'                               # DECSCNM: disable reverse video.
+  print -nr $'\e7\e[?6l\e8'                         # DECOM: disable origin mode.
+  print -nr $'\e[?7h'                               # DECAWM: enable auto-wrap mode.
+  print -nr $'\e[?8h'                               # DECARM: enable auto-repeat keys.
+  print -nr $'\e[?25h'                              # DECTCEM: make cursor visible.
+  print -nr $'\e[?2004h'                            # Enable bracketed paste.
+  for s ($'\e[?'{9,100{0..6},101{5,6}}'l') {
+    print -nr $s                                    # Disable xterm mouse and focus events.
+  }
+  print -nr ${terminfo[smkx]}                       # DECCKM & DECKPAM: use application mode.
+
+  if [[ $TERM = linux ]] {                          # Color palette for Linux virtual console.
+    for idx rgb (
+      0 050505  1 cc0000  2 4e9a06  3 c4a000        # Black, red, green, yellow
+      4 3465a4  5 75507b  6 06989a  7 a8b3a8        # Blue, magenta, cyan, white
+      8 555753  9 ef2929  A 8ae234  B fce94f        # Bri black, bri red, bri green, bri yellow
+      C 729fcf  D ad7fa8  E 34e2e2  F ffffff        # Bri blue, bri magenta, bri cyan, bri white
+    ) {
+      print -rn -- $'\e]'"${idx}${rgb}"$'\e\\'
+    }
+  }
+}
+# ----------------------------------------------------------------------------------------------- #
+
+
 # [ LOAD LS COLORS ]----------------------------------------------------------------------------- #
 # Load colors from ~/.dir_colors or /etc/DIR_COLORS, or use the default colors if they don't exist.
 typeset -gxUT LS_COLORS ls_colors ':'
@@ -340,32 +379,7 @@ if [[ $TERM != linux ]] {
   ) { zle -N $widget && __ZSHRC__bindkeys $keycode $widget }
 }
 
-# Reset ----------------------------------------------------------------------------------------- #
-__ZSHRC__reset_terminal() {
-  stty sane -imaxbel -brkint ixoff iutf8            # Reset terminal settings.
-  print -nr $'\e<'                                  # Exit VT52 mode.
-  print -nr $'\e7\e[?1049l\e8'                      # Use main screen buffer.
-  print -nr $'\e7\e[0;0r\e8'                        # DECSTBM: unset top/bottom margins.
-  print -nr $'\e(B\e)B'                             # SCS: set G0 and G1 charsets to US-ASCII.
-  [[ $TERM != linux ]] && print -nr $'\e*A\e+A'     # SCS: set G2 and G3 charsets to Latin-1.
-  print -nr $'\Co'                                  # Invoke G0 charset as GL
-  print -nr $'\e~'                                  # Invoke G1 charset as GR.
-  print -nr $'\e%G'                                 # Enable UTF-8 mode.
-  print -nr $'\e#5'                                 # DECSWL: single-width line.
-  print -nr $'\e[3l'                                # DECCRM: don't show control characters.
-  print -nr $'\e[20l'                               # LNM: disable automatic new lines.
-  print -nr $'\e[?5l'                               # DECSCNM: disable reverse video.
-  print -nr $'\e7\e[?6l\e8'                         # DECOM: disable origin mode.
-  print -nr $'\e[?7h'                               # DECAWM: enable auto-wrap mode.
-  print -nr $'\e[?8h'                               # DECARM: enable auto-repeat keys.
-  print -nr $'\e[?25h'                              # DECTCEM: make cursor visible.
-  print -nr $'\e[?2004h'                            # Enable bracketed paste.
-  for s ($'\e[?'{9,100{0..6},101{5,6}}'l') {
-    print -nr $s                                    # Disable xterm mouse and focus events.
-  }
-  print -nr ${terminfo[smkx]}                       # DECCKM & DECKPAM: use application mode.
-}
-
+# Disable application mode when leaving ZLE ----------------------------------------------------- #
 zle-line-finish() {
   ((${+terminfo[rmkx]})) && echoti rmkx             # Disable application mode
 }
