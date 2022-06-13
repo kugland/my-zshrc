@@ -497,9 +497,7 @@ __ZSHRC__ellipsized_path_window_title() {
     }
     cwd=${(j:/:)cwd_array}                          # Join the array back into a path.
     if (( ${#cwd_array} >= 3 )) {                   # If there's at least 3 elements,
-      local head=${${(%):-"%20>>${cwd}%>>"}%/*}     # Get the head of the path.
-      local tail=${${(%):-"%20<<${cwd}%<<"}#*/}     # Get the tail of the path.
-      cwd=${head}/…/${tail}                         # Join and add ellipsis.
+      cwd=${${cwd[1,20]}%/*}/…/${${cwd[-20,-1]}#*/} # Join the head and the tail with an ellipsis.
     }
     if [[ ${cwd[1]} != '~' ]] { cwd=/${cwd} }       # Prefix with '/' if it doesn't start with '~'.
   }
