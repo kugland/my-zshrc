@@ -476,7 +476,7 @@ myzshrc_prompt_precmd() {
 
   # RPS2 will be type of the current open block (if, while, for, etc.)
   # Make RPS2 show [cont] when we're in a continuation line (the previous line ended with '\').
-  RPS2='%B%F{black}[%f%b${${${:-$(print -P "%^")}//(#s)cmdsubst #/}//(#s)(#e)/cont}%B%F{black}]%f%b'
+  RPS2='%B%F{black}[%f%b${${${(%):-%^}//(#s)cmdsubst #/}//(#s)(#e)/cont}%B%F{black}]%f%b'
 
   PROMPT_EOL_MARK=${eol_mark}
 }
@@ -485,7 +485,7 @@ add-zsh-hook precmd myzshrc_prompt_precmd
 
 # Window title ---------------------------------------------------------------------------------- #
 __ZSHRC__ellipsized_path_window_title() {
-  local cwd=$(print -Pn '%~')                       # Current working directory.
+  local cwd=${(%):-%~}                              # Current working directory.
   if (( ${#cwd} > 40 )) {                           # If it's too long,
     local cwd_array=(${(s:/:)${cwd}})               # Split the path into an array.
     local i
@@ -497,8 +497,8 @@ __ZSHRC__ellipsized_path_window_title() {
     }
     cwd=${(j:/:)cwd_array}                          # Join the array back into a path.
     if (( ${#cwd_array} >= 3 )) {                   # If there's at least 3 elements,
-      local head=${$(print -Pnr '%20>>$cwd%>>')%/*} # Get the head of the path.
-      local tail=${$(print -Pnr '%20<<$cwd%<<')#*/} # Get the tail of the path.
+      local head=${${(%):-"%20>>${cwd}%>>"}%/*}     # Get the head of the path.
+      local tail=${${(%):-"%20<<${cwd}%<<"}#*/}     # Get the tail of the path.
       cwd=${head}/…/${tail}                         # Join and add ellipsis.
     }
     if [[ ${cwd[1]} != '~' ]] { cwd=/${cwd} }       # Prefix with '/' if it doesn't start with '~'.
