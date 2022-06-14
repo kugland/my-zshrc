@@ -476,7 +476,7 @@ myzshrc_prompt_precmd() {
 
   # RPS2 will be type of the current open block (if, while, for, etc.)
   # Make RPS2 show [cont] when we're in a continuation line (the previous line ended with '\').
-  RPS2='%B%F{black}[%f%b${${${(%):-%^}//(#s)cmdsubst #/}//(#s)(#e)/cont}%B%F{black}]%f%b'
+  RPS2='%B%F{black}[%f%b${${(%):-%^}//(#s)(#e)/cont}%B%F{black}]%f%b'
 
   PROMPT_EOL_MARK=${eol_mark}
 }
