@@ -183,25 +183,9 @@ readonly __ZSHRC__ssh_session
 
 
 # [ DETECT PUTTY ]------------------------------------------------------------------------------- #
-# Some wild heuristics to detect if we're running under PuTTY.
-[[ $TERM = putty* ]]; __ZSHRC__putty=$(( ! $? ))
+# Detect if we're running under PuTTY.
+[[ $TERM = putty* || $PUTTY = 1 ]]; __ZSHRC__putty=$(( ! $? ))
 
-if (( ! __ZSHRC__putty && __ZSHRC__ssh_session )) && [[ $TERM = xterm* ]] {
-  __ZSHRC__putty=1
-  for challenge response (
-    $'\eZ' $'\e[?6'                                 # DECID: terminal type query.
-    $'\e[>c' $'\e[>0;136;0'                         # DA: report xterm version.
-  ) {
-    stty -echo
-    print -n -- $challenge
-    read -r -d c -s TERM_RESPONSE
-    stty echo
-    [[ $TERM_RESPONSE != $response ]] \
-      && __ZSHRC__putty=0 \
-      && break
-  }
-  unset TERM_RESPONSE
-}
 readonly __ZSHRC__putty
 # ----------------------------------------------------------------------------------------------- #
 
