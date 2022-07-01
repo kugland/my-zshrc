@@ -541,7 +541,7 @@ add-zsh-hook preexec __ZSHRC__preexec_window_title
 # Show git status in RPROMPT -------------------------------------------------------------------- #
 # On Arch Linux, install the gitstatus, gitstatus-bin or gitstatus-git packages from AUR.
 # For other distros, cf. https://github.com/romkatv/gitstatus.
-if [[ -r /usr/share/gitstatus/gitstatus.plugin.zsh ]] {
+if [[ -n ${commands[git]} && -r /usr/share/gitstatus/gitstatus.plugin.zsh ]] {
   source /usr/share/gitstatus/gitstatus.plugin.zsh
 
   # Sets GITSTATUS_PROMPT to reflect the state of the current git repository.
