@@ -190,6 +190,27 @@ readonly __ZSHRC__putty
 # ----------------------------------------------------------------------------------------------- #
 
 
+# [ DETECT FSTYPE OF $PWD ]---------------------------------------------------------------------- #
+# Cache directory filesystem types.
+typeset -gA __ZSHRC__fstypecache
+__ZSHRC__fstypecache_hash=""
+
+# Get current directory filesystem type.
+# Value is returned in variable REPLY.
+__ZSHRC__fstypecache_get() {
+  local current_hash=${$(sha256sum /etc/mtab)[1]}   # Hash the contents of /etc/mtab
+  if [[ $current_hash != $__ZSHRC__fstypecache_hash ]] { # If the hash has changed,
+    __ZSHRC__fstypecache_hash=$current_hash         # Reset the cache.
+    __ZSHRC__fstypecache=( )
+  }
+  if [[ ${__ZSHRC__fstypecache[$PWD]} = "" ]] {     # If value if not found for $PWD, compute it.
+    __ZSHRC__fstypecache[$PWD]=$(findmnt -fn -d backward -o FSTYPE --target $PWD)
+  }
+  REPLY=${__ZSHRC__fstypecache[$PWD]}
+}
+# ----------------------------------------------------------------------------------------------- #
+
+
 # [ SEQUENCE TO RESET TERMINAL ]----------------------------------------------------------------- #
 __ZSHRC__reset_terminal() {
   stty sane -imaxbel -brkint ixoff iutf8            # Reset terminal settings.
@@ -527,6 +548,11 @@ if [[ -r /usr/share/gitstatus/gitstatus.plugin.zsh ]] {
   function __ZSHRC__gitstatus_prompt_update() {
     gitstatus_prompt=''                             # Reset git status prompt.
 
+    __ZSHRC__fstypecache_get                        # Get the filesystem type of the current dir.
+    if [[ $REPLY = (automount|fuse.sshfs|nfs) ]] {  # If it's a network filesystem,
+      return                                        # don't try to get git status.
+    }
+
     # Call gitstatus_query synchronously. Note that gitstatus_query can also be
     # called asynchronously; see documentation in gitstatus.plugin.zsh.
     gitstatus_query 'MY'                  || return 1  # error
@@ -585,9 +611,6 @@ if [[ -r /usr/share/gitstatus/gitstatus.plugin.zsh ]] {
   # __ZSHRC__gitstatus_prompt_update. The flags with -1 as values enable staged, unstaged,
   # conflicted and untracked counters.
   gitstatus_stop 'MY' && gitstatus_start -s -1 -u -1 -c -1 -d -1 'MY'
-
-  # On every prompt, fetch git status and set GITSTATUS_PROMPT.
-  #add-zsh-hook precmd __ZSHRC__gitstatus_prompt_update
 } else {
   __ZSHRC__gitstatus_prompt_update() {
     gitstatus_prompt=""
@@ -760,6 +783,19 @@ for plugin (
   && __ZSHRC__bindkeys CtrlPageUp history-substring-search-up
 ((${+functions[history-substring-search-down]})) \
   && __ZSHRC__bindkeys CtrlPageDown history-substring-search-down
+
+# If syntax-highlighting plugin is available, make sure to disable it under network directories.
+if [[ -n $ZSH_HIGHLIGHT_VERSION ]] {
+  __ZSHRC__precmd_disable_syntax_highlight_on_netfs() {
+    __ZSHRC__fstypecache_get                        # Get the filesystem type of the current dir.
+    if [[ $REPLY = (automount|fuse.sshfs|nfs) ]] {  # Check if it's a network filesystem.
+      ZSH_HIGHLIGHT_MAXLENGTH=0                     # Disable syntax highlight if it is.
+    } else {
+      unset ZSH_HIGHLIGHT_MAXLENGTH                 # Enable it otherwise.
+    }
+  }
+}
+add-zsh-hook precmd __ZSHRC__precmd_disable_syntax_highlight_on_netfs
 # ----------------------------------------------------------------------------------------------- #
 
 
