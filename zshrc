@@ -800,3 +800,5 @@ add-zsh-hook precmd __ZSHRC__precmd_disable_syntax_highlight_on_netfs
 
 
 ((1))                                               # All's well that ends well
+
+# vim: set ts=2 sw=2 tw=100 et :
