@@ -384,11 +384,19 @@ if [[ $TERM != linux ]] {
   ) { zle -N $widget && __ZSHRC__bindkeys $keycode $widget }
 }
 
-# Disable application mode when leaving ZLE ----------------------------------------------------- #
+# zle-line-init and zle-line-finish ------------------------------------------------------------ #
+# I think I ran into a bug in add-zle-hook-widget, so we are settings the widgets directly.
+
+zle-line-init() {
+  ((${+terminfo[smkx]})) && echoti smkx             # Enable application mode
+  __ZSHRC__zlelineinit_overwrite                    # Set mode and cursor for overwrite/insert
+}
+
 zle-line-finish() {
   ((${+terminfo[rmkx]})) && echoti rmkx             # Disable application mode
 }
 
+zle -N zle-line-init
 zle -N zle-line-finish
 
 # Insert and overwrite mode --------------------------------------------------------------------- #
@@ -433,10 +441,6 @@ __ZSHRC__zlelineinit_overwrite() {
   # Since zle's overwrite mode is not persistent, we need to restore the state on each prompt.
   ((__ZSHRC__overwrite_state)) && zle overwrite-mode
   __ZSHRC__cursorshape_overwrite
-}
-
-zle-line-init() {
-  __ZSHRC__zlelineinit_overwrite
 }
 
 zle -N zle-line-init
