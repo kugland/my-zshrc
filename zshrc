@@ -765,7 +765,7 @@ nmed() {
     print -Pn '%B%F{cyan}Old name%b:%f %B'
     print -r -- $old
     vared -e -p '%B%F{cyan}New name%b:%f %B' new \
-      && mv -i -v -- $old $new
+      && print -Pn '%b' && mv -i -v -- $old $new
   } else {
     >&2 print -r "nmed: \`$old': File not found."
   }
