@@ -754,7 +754,24 @@ add-zsh-hook zshexit __ZSHRC__zshexit_exit_message
 # ----------------------------------------------------------------------------------------------- #
 
 
-# [ CUSTOMIZE AND COLORIZE SOME COMMANDS ]------------------------------------------------------- #
+# [ COMMANDS ]----------------------------------------------------------------------------------- #
+# Functions and aliases.
+
+# nmed - use vared to rename a file ------------------------------------------------------------- #
+nmed() {
+  local old=$1
+  local new=$1
+  if [[ -e $old ]] {
+    print -Pn '%B%F{cyan}Old name%b:%f %B'
+    print -r -- $old
+    vared -e -p '%B%F{cyan}New name%b:%f %B' new \
+      && print -Pn '%b' && mv -i -v -- $old $new
+  } else {
+    >&2 print -r "nmed: \`$old': File not found."
+  }
+}
+
+# Customize and colorize some commands ---------------------------------------------------------- #
 # Set the default flags for ls:
 #   -h: human readable sizes (e.g. 1K 2M 4G)
 #   --color=auto: use colors when output is a terminal
