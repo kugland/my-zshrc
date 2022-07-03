@@ -830,8 +830,9 @@ __ZSHRC__deps_fetch() {
     if [[ -f $absfile ]] && ( __ZSHRC__deps_check_sha256 $absfile $sha256 ) {
       continue
     } else {
-      echo 'Downloading zshrc dependency: '$name'/'$file'...'
+      print -Pn "\e[2K\e[1G%B%0F[%b%fzshrc%B%0F]%b%f %F{green}Fetching dependency \e[0;4m$name/$file\e[0m"
       curl -sSL $baseurl/$file -o $absfile
+      print -rn $'\e[2K\e[1G'
     }
     __ZSHRC__deps_check_sha256 $absfile $sha256 || return 1
   }
