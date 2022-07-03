@@ -139,6 +139,22 @@ readonly HISTSIZE SAVEHIST HISTFILE                 # Make the variables readonl
 # ----------------------------------------------------------------------------------------------- #
 
 
+# [ AUTO-UPDATE ZSHRC ]-------------------------------------------------------------------------- #
+() {
+  local update_interval=$(( 2 * 24 * 60 * 60 ))      # Update interval in seconds (2 days).
+  local zshrc_mtime=$(zstat +mtime ~/.zshrc)         # Get modification time of /etc/zshrc.
+  if (( (zshrc_mtime + update_interval) < $(date '+%s') )) {
+    local zshrc_url=https://gitlab.com/kugland/my-zshrc/-/raw/master/zshrc # URL of zshrc.
+    print -Pnr $'\e[2K\e[1G%F{green}Updating zshrc\e[0m ...'
+    curl -sSL $zshrc_url >/tmp/zsh-$UID/zshrc-new \
+      && mv /tmp/zsh-$UID/zshrc-new ~/.zshrc \
+      && print -rn -- $'\e[2K\e[1G' \
+      && exec zsh                                    # Execute zsh with the same arguments.
+  }
+}
+# ----------------------------------------------------------------------------------------------- #
+
+
 # [ COLOR SUPPORT ]------------------------------------------------------------------------------ #
 # We'll assume that the terminal supports at least 4-bit colors, so we should detect support for
 # 8 and 24-bit color. I believe it's also reasonable to assume that a terminal that supports 24-bit
@@ -479,7 +495,10 @@ myzshrc_prompt_precmd() {
   ((__ZSHRC__ssh_session)) && PS1=$ssh_indicator || PS1=''
   PS1+="${before_userhost}%(!..%n@)%m${before_path}%~${after_path}"
 
-  RPROMPT="\${__ZSHRC__overwrite_prompt}%(1j.  $jobs_indicator.)%(0?..  $error_indicator)$gitstatus_prompt"
+  RPROMPT="\${__ZSHRC__overwrite_prompt}"
+  RPROMPT+="%(1j.  $jobs_indicator.)"
+  RPROMPT+="%(0?..  $error_indicator)"
+  RPROMPT+=$gitstatus_prompt
 
   PS2=''; for level ({1..16}) { PS2+="%(${level}_.${continuation}.)" }; PS2+=' '
 
@@ -791,32 +810,112 @@ alias ip='command ip --color=auto'                  # Add colors to ip command.
 
 
 # [ LOAD PLUGINS ]------------------------------------------------------------------------------- #
-# The paths here are the ones used by Arch Linux's packages 'zsh-history-substring-search' and
-# 'zsh-syntax-highlighting'. In other systems, these paths may be different. If the files are not
-# found, we'll fail silently.
-for plugin (
-  /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.plugin.zsh
-  /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh
-) { 2>/dev/null source $plugin }
+# Download and load plugins.
 
-# If history-substring-search is available, bind Ctrl+PageUp and Ctrl+PageDown to it.
-((${+functions[history-substring-search-up]})) \
-  && __ZSHRC__bindkeys CtrlPageUp history-substring-search-up
-((${+functions[history-substring-search-down]})) \
-  && __ZSHRC__bindkeys CtrlPageDown history-substring-search-down
+# Check sha256sum of multiple files.
+# Parameters:
+#   $1: plugin name
+#   $3: file name
+#   $4: sha256 hash
+#   $5: file name
+#   $6: sha256 hash
+#   ...: possibly more files
+__ZSHRC__deps_check_sha256sum() {
+  local name=$1
+  shift 1
+  local file sha256
+  for file sha256 ("$@") {
+    print -r "$sha256  $HOME/.zshrc-deps/$name/$file"
+  } | >/dev/null 2>&1 sha256sum -c --quiet -
+}
 
-# If syntax-highlighting plugin is available, make sure to disable it under network directories.
-if [[ -n $ZSH_HIGHLIGHT_VERSION ]] {
-  __ZSHRC__precmd_disable_syntax_highlight_on_netfs() {
-    __ZSHRC__fstypecache_get                        # Get the filesystem type of the current dir.
-    if [[ $REPLY = (automount|fuse.sshfs|nfs) ]] {  # Check if it's a network filesystem.
-      ZSH_HIGHLIGHT_MAXLENGTH=0                     # Disable syntax highlight if it is.
-    } else {
-      unset ZSH_HIGHLIGHT_MAXLENGTH                 # Enable it otherwise.
-    }
+# Download a plugin and install it.
+# Parameters:
+#   $1: plugin name
+#   $2: plugin base url
+#   $3: file name
+#   $4: sha256 hash
+#   $5: file name
+#   $6: sha256 hash
+#   ...: possibly more files
+__ZSHRC__deps_fetch() {
+  local name=$1
+  local baseurl=$2
+  shift 2
+  local file sha256
+  if [[ -d "$HOME/.zshrc-deps/$name" ]] {
+    __ZSHRC__deps_check_sha256sum "$name" "$@" && return 0
+  }
+  local curl_args=( -sSL -Z --create-dirs )
+  for file sha256 ("$@") {
+    curl_args+=( -o "$HOME/.zshrc-deps/$name/$file" "$baseurl/$file" )
+  }
+  print -Pnr $'\e[2K\e[1G%B%0F[%b%fzshrc%B%0F]%b%f %F{green}Fetching dependency \e[0;4m$name\e[0m ...'
+  curl "${curl_args[@]}"
+  print -rn $'\e[2K\e[1G'
+  __ZSHRC__deps_check_sha256sum "$name" "$@" || {
+    rm -rf "$HOME/.zshrc-deps/$name"
+    return 1
   }
 }
-add-zsh-hook precmd __ZSHRC__precmd_disable_syntax_highlight_on_netfs
+
+__ZSHRC__deps_fetch \
+  zsh-syntax-highlighting \
+  https://raw.githubusercontent.com/zsh-users/zsh-syntax-highlighting/0.7.1 \
+  zsh-syntax-highlighting.zsh \
+  b597811f7f6c1169d45d4820d3a3dcfc5053ceefb8f88c5b0f4562f500499884 \
+  zsh-syntax-highlighting.plugin.zsh \
+  a2958aeb49a964e0831c879c909db446da59a01d3ae404576050753a08eeeeec \
+  highlighters/brackets/brackets-highlighter.zsh \
+  55f8002d07d78edbf33a918c176eee8079b81aaadc1efdfd75f29c872befc56c \
+  highlighters/cursor/cursor-highlighter.zsh \
+  bd6ef3aae900fee57ff132360b3dd9d68df5aab150a33e32259fd5adbe8efd49 \
+  highlighters/line/line-highlighter.zsh \
+  1a12c094770bc00276395dc71a398a63fd768c433453d35f4e47e5d315dfacf0 \
+  highlighters/main/main-highlighter.zsh \
+  f72e9c2b8c91bb239295e4e2e02f756086276a021e72fc03de98e61c62b6e39a \
+  highlighters/pattern/pattern-highlighter.zsh \
+  29fa6c332f1a1c81218041fd9704becba0fc01b455c3e342e06b7edae3e567e3 \
+  highlighters/root/root-highlighter.zsh \
+  7a038444d4cd60f9eaf07993b6a14d0055ad8706e09a32780cb65ea0a90530ee \
+  .version \
+  902311c7bb38fa1658ff403def6158ee7378fe9d6e2e284fa1c38735c31bd30b \
+  .revision-hash \
+  2070743a71dbdccd323f1848e8f9f1fd893081c4e779f9f5a3cebcee6b2e467d \
+  && {
+    source ~/.zshrc-deps/zsh-syntax-highlighting/zsh-syntax-highlighting.plugin.zsh
+
+    # Disable syntax highlighting when under network directories.
+    if [[ -n $ZSH_HIGHLIGHT_VERSION ]] {
+      __ZSHRC__precmd_disable_syntax_highlight_on_netfs() {
+        __ZSHRC__fstypecache_get                    # Get the filesystem type of the cur dir.
+        if [[ $REPLY = (automount|fuse.sshfs|nfs) ]] {  # Check if it's a network filesystem.
+          ZSH_HIGHLIGHT_MAXLENGTH=0                 # Disable syntax highlight if it is.
+        } else {
+          unset ZSH_HIGHLIGHT_MAXLENGTH             # Enable it otherwise.
+        }
+      }
+    }
+    add-zsh-hook precmd __ZSHRC__precmd_disable_syntax_highlight_on_netfs
+  }
+
+__ZSHRC__deps_fetch \
+  zsh-history-substring-search \
+  https://raw.githubusercontent.com/zsh-users/zsh-history-substring-search/4abed97b6e67eb5590b39bcd59080aa23192f25d \
+  zsh-history-substring-search.plugin.zsh \
+  edceeaa69a05796201aa064c549a85bc4961cc676efcf9c94c02ec0a4867542b \
+  zsh-history-substring-search.zsh \
+  9365d9919e8cbb77f4a26c39f02434f3a46d0777bda0ef3fa2f585d95999c7bd \
+  && {
+    source ~/.zshrc-deps/zsh-history-substring-search/zsh-history-substring-search.plugin.zsh
+
+    # Bind Ctrl+PageUp and Ctrl+PageDown to history-substring-search-{up,down}.
+    __ZSHRC__bindkeys CtrlPageUp history-substring-search-up
+    __ZSHRC__bindkeys CtrlPageDown history-substring-search-down
+  }
+
+unset __ZSHRC__deps_fetch
+unset __ZSHRC__deps_check_sha256
 # ----------------------------------------------------------------------------------------------- #
 
 
