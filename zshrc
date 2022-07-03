@@ -820,11 +820,10 @@ __ZSHRC__deps_check_sha256() {
 __ZSHRC__deps_fetch() {
   local name=$1
   local baseurl=$2
-  local depdir=~/.zshrc-deps/$name
   shift 2
   local file sha256
   for file sha256 ("$@") {
-    absfile=${depdir}/${file}
+    local absfile=~/.zshrc-deps/$name/${file}
     local dir=${absfile:A:h}
     [[ -d $dir ]] || mkdir -p $dir
     if [[ -f $absfile ]] && ( __ZSHRC__deps_check_sha256 $absfile $sha256 ) {
