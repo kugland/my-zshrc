@@ -895,7 +895,8 @@ __ZSHRC__deps_fetch \
 
 __ZSHRC__deps_fetch \
   zsh-history-substring-search \
-  https://raw.githubusercontent.com/zsh-users/zsh-history-substring-search/4abed97b6e67eb5590b39bcd59080aa23192f25d \
+  https://raw.githubusercontent.com/zsh-users/zsh-history-substring-search/ \
+  4abed97b6e67eb5590b39bcd59080aa23192f25d \
   zsh-history-substring-search.plugin.zsh \
   edceeaa69a05796201aa064c549a85bc4961cc676efcf9c94c02ec0a4867542b \
   zsh-history-substring-search.zsh \
