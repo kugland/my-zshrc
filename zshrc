@@ -141,13 +141,13 @@ readonly HISTSIZE SAVEHIST HISTFILE                 # Make the variables readonl
 
 # [ UPDATE ZSHRC ]------------------------------------------------------------------------------- #
 () {
-  local update_interval=$(( 2 * 24 * 60 * 60 ))     # Update interval in seconds (2 days).
-  local zshrc_mtime=$(zstat +mtime ~/zshrc)         # Get modification time of /etc/zshrc.
+  local update_interval=$(( 2 * 24 * 60 * 60 ))      # Update interval in seconds (2 days).
+  local zshrc_mtime=$(zstat +mtime ~/.zshrc)         # Get modification time of /etc/zshrc.
   if (( (zshrc_mtime + update_interval) < EPOCHSECONDS )) {
     local zshrc_url=https://gitlab.com/kugland/my-zshrc/-/raw/master/zshrc # URL of zshrc.
     print -Pnr $'\e[2K\e[1G%F{green}Updaring zshrc\e[0m ...'
     curl -sSL -o /tmp/zsh-$UID/zshrc-new $zshrc_url \
-      && mv /tmp/zsh-$UID/zshrc-new ~/zshrc \
+      && mv /tmp/zsh-$UID/zshrc-new ~/.zshrc \
       && print -rn -- $'\e[2K\e[1G' \
       && exec zsh "$@"                              # Execute zsh with the same arguments.
   }
