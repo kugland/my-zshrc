@@ -154,6 +154,7 @@ readonly HISTSIZE SAVEHIST HISTFILE                 # Make the variables readonl
 }
 # ----------------------------------------------------------------------------------------------- #
 
+
 # [ COLOR SUPPORT ]------------------------------------------------------------------------------ #
 # We'll assume that the terminal supports at least 4-bit colors, so we should detect support for
 # 8 and 24-bit color. I believe it's also reasonable to assume that a terminal that supports 24-bit
