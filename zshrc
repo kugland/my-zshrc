@@ -146,7 +146,7 @@ readonly HISTSIZE SAVEHIST HISTFILE                 # Make the variables readonl
   if (( (zshrc_mtime + update_interval) < $(date '+%s') )) {
     local zshrc_url=https://gitlab.com/kugland/my-zshrc/-/raw/master/zshrc # URL of zshrc.
     print -Pnr $'\e[2K\e[1G%F{green}Updating zshrc\e[0m ...'
-    curl -sSL -o /tmp/zsh-$UID/zshrc-new $zshrc_url \
+    curl -sSL >/tmp/zsh-$UID/zshrc-new $zshrc_url \
       && mv /tmp/zsh-$UID/zshrc-new ~/.zshrc \
       && print -rn -- $'\e[2K\e[1G' \
       && exec zsh                                    # Execute zsh with the same arguments.
@@ -895,8 +895,7 @@ __ZSHRC__deps_fetch \
 
 __ZSHRC__deps_fetch \
   zsh-history-substring-search \
-  https://raw.githubusercontent.com/zsh-users/zsh-history-substring-search/ \
-  4abed97b6e67eb5590b39bcd59080aa23192f25d \
+  https://raw.githubusercontent.com/zsh-users/zsh-history-substring-search/4abed97b6e67eb5590b39bcd59080aa23192f25d \
   zsh-history-substring-search.plugin.zsh \
   edceeaa69a05796201aa064c549a85bc4961cc676efcf9c94c02ec0a4867542b \
   zsh-history-substring-search.zsh \
