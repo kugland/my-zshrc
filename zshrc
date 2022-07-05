@@ -139,6 +139,21 @@ readonly HISTSIZE SAVEHIST HISTFILE                 # Make the variables readonl
 # ----------------------------------------------------------------------------------------------- #
 
 
+# [ UPDATE ZSHRC ]------------------------------------------------------------------------------- #
+() {
+  local update_interval=$(( 2 * 24 * 60 * 60 ))     # Update interval in seconds (2 days).
+  local zshrc_mtime=$(zstat +mtime ~/zshrc)         # Get modification time of /etc/zshrc.
+  if (( (zshrc_mtime + update_interval) < EPOCHSECONDS )) {
+    local zshrc_url=https://gitlab.com/kugland/my-zshrc/-/raw/master/zshrc # URL of zshrc.
+    print -Pnr $'\e[2K\e[1G%F{green}Updaring zshrc\e[0m ...'
+    curl -sSL -o /tmp/zsh-$UID/zshrc-new $zshrc_url \
+      && mv /tmp/zsh-$UID/zshrc-new ~/zshrc \
+      && print -rn -- $'\e[2K\e[1G' \
+      && exec zsh "$@"                              # Execute zsh with the same arguments.
+  }
+}
+# ----------------------------------------------------------------------------------------------- #
+
 # [ COLOR SUPPORT ]------------------------------------------------------------------------------ #
 # We'll assume that the terminal supports at least 4-bit colors, so we should detect support for
 # 8 and 24-bit color. I believe it's also reasonable to assume that a terminal that supports 24-bit
@@ -829,7 +844,7 @@ __ZSHRC__deps_fetch() {
     if [[ -f $absfile ]] && ( __ZSHRC__deps_check_sha256 $absfile $sha256 ) {
       continue
     } else {
-      print -Pn "\e[2K\e[1G%B%0F[%b%fzshrc%B%0F]%b%f %F{green}Fetching dependency \e[0;4m$name/$file\e[0m"
+      print -Pnr $'\e[2K\e[1G%B%0F[%b%fzshrc%B%0F]%b%f %F{green}Fetching dependency \e[0;4m$name/$file\e[0m ...'
       curl -sSL $baseurl/$file -o $absfile
       print -rn $'\e[2K\e[1G'
     }
