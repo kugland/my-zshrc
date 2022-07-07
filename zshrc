@@ -851,6 +851,7 @@ __ZSHRC__deps_fetch() {
   local file sha256
   if [[ -d "$HOME/.zshrc-deps/$name" ]] {
     __ZSHRC__deps_check_sha256sum "$name" "$@" && return 0
+    rm -rf "$HOME/.zshrc-deps/$name"
   }
   local curl_args=( -sSL --create-dirs )
   for file sha256 ("$@") {
