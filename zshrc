@@ -812,16 +812,21 @@ alias ip='command ip --color=auto'                  # Add colors to ip command.
 # [ LOAD PLUGINS ]------------------------------------------------------------------------------- #
 # Download and load plugins.
 
-# Check the sha256sum of a file, and compare it to a given hash.
-# If the hash is incorrect, delete the file and return 1.
-__ZSHRC__deps_check_sha256() {
-  local file=$1
-  local sha256=$2
-  [[ -f $file ]] || return 1
-  [[ $sha256 == ${$(sha256sum $file)[1]} ]] || {
-    rm -f $file
-    return 1
-  }
+# Check sha256sum of multiple files.
+# Parameters:
+#   $1: plugin name
+#   $3: file name
+#   $4: sha256 hash
+#   $5: file name
+#   $6: sha256 hash
+#   ...: possibly more files
+__ZSHRC__deps_check_sha256sum() {
+  local name=$1
+  shift 1
+  local file sha256
+  for file sha256 ("$@") {
+    print -r "$sha256  $HOME/.zshrc-deps/$name/$file"
+  } | >/dev/null 2>&1 sha256sum -c --quiet -
 }
 
 # Download a plugin and install it.
@@ -838,18 +843,19 @@ __ZSHRC__deps_fetch() {
   local baseurl=$2
   shift 2
   local file sha256
+  if [[ -d "$HOME/.zshrc-deps/$name" ]] {
+    __ZSHRC__deps_check_sha256sum "$name" "$@" && return 0
+  }
+  curl_args=( -sSL -Z --create-dirs )
   for file sha256 ("$@") {
-    local absfile=~/.zshrc-deps/$name/${file}
-    local dir=${absfile:A:h}
-    [[ -d $dir ]] || mkdir -p $dir
-    if [[ -f $absfile ]] && ( __ZSHRC__deps_check_sha256 $absfile $sha256 ) {
-      continue
-    } else {
-      print -Pnr $'\e[2K\e[1G%B%0F[%b%fzshrc%B%0F]%b%f %F{green}Fetching dependency \e[0;4m$name/$file\e[0m ...'
-      curl -sSL $baseurl/$file -o $absfile
-      print -rn $'\e[2K\e[1G'
-    }
-    __ZSHRC__deps_check_sha256 $absfile $sha256 || return 1
+    curl_args+=( -o "$HOME/.zshrc-deps/$name/$file" "$baseurl/$file" )
+  }
+  print -Pnr $'\e[2K\e[1G%B%0F[%b%fzshrc%B%0F]%b%f %F{green}Fetching dependency \e[0;4m$name\e[0m ...'
+  curl "${curl_args[@]}"
+  print -rn $'\e[2K\e[1G'
+  __ZSHRC__deps_check_sha256sum "$name" "$@" || {
+    rm -rf "$HOME/.zshrc-deps/$name"
+    return 1
   }
 }
 
