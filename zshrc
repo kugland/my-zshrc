@@ -844,7 +844,7 @@ __ZSHRC__dependency() {
       ln -s $pkgid ~/.zshrc-deps/$name || return 1
     } always {
       if (( TRY_BLOCK_ERROR )) {
-        print -P '%B%F{red}Failed%b%f'
+        print -P '%B%F{red}failed%b%f'
       } else {
         print -P '%B%F{green}OK%b%f'
       }
