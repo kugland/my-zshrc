@@ -871,7 +871,7 @@ __ZSHRC__dependency \
   }
 
 # zsh history substring search ------------------------------------------------------------------ #
-# renovate: datasource=git-refs depName=zsh-users/zsh-history-substring-search
+# renovate: datasource=git-refs depName=zsh-users/zsh-history-substring-search versioning=git
 ZSH_HISTORY_SUBSTR_SEARCH_VERSION=e310a75a52ed17947c11a3ecd168b4980be008b7
 __ZSHRC__dependency \
   zsh-history-substring-search \
@@ -890,7 +890,7 @@ ZSH_COMPLETIONS_VERSION=0.34.0
 
 __ZSHRC__dependency \
   zsh-completions \
-  "https://github.com/zsh-users/zsh-completions/tarball/${ZSH_COMPLETIONS_VERSION}" \
+  https://github.com/zsh-users/zsh-completions/tarball/${ZSH_COMPLETIONS_VERSION} \
   && {
     source ~/.zshrc-deps/zsh-completions/zsh-completions.plugin.zsh
   }
