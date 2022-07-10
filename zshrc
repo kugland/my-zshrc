@@ -849,7 +849,7 @@ __ZSHRC__dependency() {
 
 # zsh syntax highlighting ----------------------------------------------------------------------- #
 # renovate: datasource=github-tags depName=zsh-users/zsh-syntax-highlighting
-ZSH_SYNTAX_HIGHLIGHTING_VERSION=0.7.0
+ZSH_SYNTAX_HIGHLIGHTING_VERSION=0.7.1
 __ZSHRC__dependency \
   zsh-syntax-highlighting \
   https://github.com/zsh-users/zsh-syntax-highlighting/tarball/${ZSH_SYNTAX_HIGHLIGHTING_VERSION} \
