@@ -259,6 +259,7 @@ __ZSHRC__reset_terminal() {
   print -nr $'\e[?8h'                               # DECARM: enable auto-repeat keys.
   print -nr $'\e[?25h'                              # DECTCEM: make cursor visible.
   print -nr $'\e[?2004h'                            # Enable bracketed paste.
+  local s
   for s ($'\e[?'{9,100{0..6},101{5,6}}'l') {
     print -nr $s                                    # Disable xterm mouse and focus events.
   }
@@ -850,6 +851,7 @@ __ZSHRC__dependency() {
 # zsh syntax highlighting ----------------------------------------------------------------------- #
 # renovate: datasource=github-tags depName=zsh-users/zsh-syntax-highlighting
 ZSH_SYNTAX_HIGHLIGHTING_VERSION=0.7.1
+
 __ZSHRC__dependency \
   zsh-syntax-highlighting \
   https://github.com/zsh-users/zsh-syntax-highlighting/tarball/${ZSH_SYNTAX_HIGHLIGHTING_VERSION} \
@@ -873,6 +875,7 @@ __ZSHRC__dependency \
 # zsh history substring search ------------------------------------------------------------------ #
 # renovate: datasource=git-refs depName=zsh-users/zsh-history-substring-search versioning=git
 ZSH_HISTORY_SUBSTR_SEARCH_VERSION=e310a75a52ed17947c11a3ecd168b4980be008b7
+
 __ZSHRC__dependency \
   zsh-history-substring-search \
   https://github.com/zsh-users/zsh-history-substring-search/tarball/${ZSH_HISTORY_SUBSTR_SEARCH_VERSION} \
@@ -897,7 +900,10 @@ __ZSHRC__dependency \
 # ----------------------------------------------------------------------------------------------- #
 
 
-# [ UNSET UNNEEDED FUNCTIONS ]------------------------------------------------------------------- #
+# [ UNSET UNNEEDED VARIABLES AND FUNCTIONS ]----------------------------------------------------- #
+unset ZSH_HISTORY_SUBSTR_SEARCH_VERSION
+unset ZSH_SYNTAX_HIGHLIGHTING_VERSION
+unset ZSH_COMPLETIONS_VERSION
 unset -f __ZSHRC__bindkeys
 unset -f __ZSHRC__dependency
 # ----------------------------------------------------------------------------------------------- #
