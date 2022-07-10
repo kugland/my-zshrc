@@ -2,10 +2,11 @@
     "extends": [
         "config:base"
     ],
+    "enabledManagers": ["regex"],
     "regexManagers": [{
         "fileMatch": ["^zshrc$"],
         "matchStrings": [
-            "^# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\s.*?_VERSION=(?<currentValue>.*)\\s"
+            "\n# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\n.*?_VERSION=(?<currentValue>.*)\n"
         ],
         "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
     }]
