@@ -884,7 +884,7 @@ __ZSHRC__dependency \
 
 # zsh completions ------------------------------------------------------------------------------- #
 # renovate: datasource=github-tags depName=zsh-users/zsh-completions
-ZSH_COMPLETIONS_VERSION=0.33.0
+ZSH_COMPLETIONS_VERSION=0.34.0
 
 __ZSHRC__dependency \
   zsh-completions \
