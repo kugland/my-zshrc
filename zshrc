@@ -871,9 +871,11 @@ __ZSHRC__dependency \
   }
 
 # zsh history substring search ------------------------------------------------------------------ #
+# renovate: datasource=git-refs depName=zsh-users/zsh-history-substring-search
+ZSH_HISTORY_SUBSTR_SEARCH_VERSION=e310a75a52ed17947c11a3ecd168b4980be008b7
 __ZSHRC__dependency \
   zsh-history-substring-search \
-  https://github.com/zsh-users/zsh-history-substring-search/tarball/4abed97b6e67eb5590b39bcd \
+  https://github.com/zsh-users/zsh-history-substring-search/tarball/${ZSH_HISTORY_SUBSTR_SEARCH_VERSION} \
   && {
     source ~/.zshrc-deps/zsh-history-substring-search/zsh-history-substring-search.plugin.zsh
 
