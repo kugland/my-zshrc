@@ -280,7 +280,7 @@ __ZSHRC__reset_terminal() {
 
 # [ LOAD LS COLORS ]----------------------------------------------------------------------------- #
 # Load colors for LS_COLORS from the appendix of the .zshrc file.
-eval $(dircolors -b <(sed -ne '/^:<<DIR_COLORS$/,/^DIR_COLORS$/{s/.*DIR_COLORS$//g;p};' ~/.zshrc))
+eval $(dircolors -b <(sed -ne '/.*DIR_COLORS_APPENDIX$/,//{s///g;p};' ~/.zshrc))
 # ----------------------------------------------------------------------------------------------- #
 
 
@@ -900,7 +900,7 @@ unset -f __ZSHRC__dependency
 
 
 # [ APPENDIX: DIR_COLORS ]----------------------------------------------------------------------- #
-:<<DIR_COLORS
+:<<DIR_COLORS_APPENDIX
 COLORTERM ?*
 
 TERM Eterm
@@ -1224,7 +1224,8 @@ EXEC        1;32      # files with execute permission.
 .ucf-old    0;90
 .rpmorig    0;90
 .rpmsave    0;90
-DIR_COLORS
+DIR_COLORS_APPENDIX
+# ----------------------------------------------------------------------------------------------- #
 
 
 # vim: set ts=2 sw=2 tw=100 et :
