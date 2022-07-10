@@ -279,13 +279,8 @@ __ZSHRC__reset_terminal() {
 
 
 # [ LOAD LS COLORS ]----------------------------------------------------------------------------- #
-# Load colors from ~/.dir_colors or /etc/DIR_COLORS, or use the default colors if they don't exist.
-typeset -gxUT LS_COLORS ls_colors ':'
-eval $(
-  [[ -f ~/.dir_colors ]] && dircolors -b ~/.dir_colors && return
-  [[ -f /etc/DIR_COLORS ]] && dircolors -b /etc/DIR_COLORS && return
-  dircolors -b
-)
+# Load colors for LS_COLORS from the appendix of the .zshrc file.
+eval $(dircolors -b <(sed -ne '/^:<<DIR_COLORS$/,/^DIR_COLORS$/{s/.*DIR_COLORS$//g;p};' ~/.zshrc))
 # ----------------------------------------------------------------------------------------------- #
 
 
@@ -902,5 +897,334 @@ unset -f __ZSHRC__dependency
 
 
 ((1))                                               # All's well that ends well
+
+
+# [ APPENDIX: DIR_COLORS ]----------------------------------------------------------------------- #
+:<<DIR_COLORS
+COLORTERM ?*
+
+TERM Eterm
+TERM ansi
+TERM *color*
+TERM con[0-9]*x[0-9]*
+TERM cons25
+TERM console
+TERM cygwin
+TERM *direct*
+TERM dtterm
+TERM gnome
+TERM hurd
+TERM jfbterm
+TERM konsole
+TERM kterm
+TERM linux
+TERM linux-c
+TERM mlterm
+TERM putty
+TERM rxvt*
+TERM screen*
+TERM st
+TERM terminator
+TERM tmux*
+TERM vt100
+TERM xterm*
+
+RESET       0         # reset to "normal" color
+NORMAL      0         # no color code at all
+FILE        0         # regular file: use no color at all
+DIR         1;34      # directory
+LINK        1;36;3    # symbolic link.
+MULTIHARDLINK  0      # regular file with more than one link
+FIFO        1;37;45   # pipe
+SOCK        1;37;45   # socket
+DOOR        1;37;45   # door
+BLK         1;33      # block device driver
+CHR         1;33      # character device driver
+ORPHAN      0;31;3    # symlink to nonexistent or non-stat'able file, ...
+MISSING     1;30;3    # ... and the files they point to
+SETUID      1;37;41   # file that is setuid (u+s)
+SETGID      0;30;43   # file that is setgid (g+s)
+CAPABILITY  0;30;41   # file with capability
+STICKY_OTHER_WRITABLE  0;30;42  # dir that is sticky and other-writable (+t,o+w)
+OTHER_WRITABLE  0;34;42  # dir that is other-writable and not sticky (-t,o+w)
+STICKY      1;37;44   # dir that is sticky and not other-writable (+t,o-w)
+EXEC        1;32      # files with execute permission.
+
+# -----------------------------------------------------------------------------
+# Archives and compressed files
+# -----------------------------------------------------------------------------
+# compressed files
+.br         0;91
+.bz2        0;91
+.gz         0;91
+.lz         0;91
+.lz4        0;91
+.lzma       0;91
+.lzo        0;91
+.xz         0;91
+.z          0;91
+.Z          0;91
+.zst        0;91
+.zstd       0;91
+# tar archives and compressed tar archives
+.tar        0;91
+.tbz2       0;91
+.tgz        0;91
+.txz        0;91
+.tz         0;91
+.tzst       0;91
+# other archives
+.7z         0;91
+.rar        0;91
+.zip        0;91
+# misc linux packages
+.cpio       0;91
+.deb        0;91
+.rpm        0;91
+# disk image
+.dmg        0;91
+.img        0;91
+.iso        0;91
+.nrg        0;91
+.squashfs   0;91
+# java archive
+.ear        0;91
+.jar        0;91
+.war        0;91
+# windows archives
+.cab        0;91
+.wim        0;91
+
+# -----------------------------------------------------------------------------
+# Multimedia files (images, audio, video)
+# -----------------------------------------------------------------------------
+# audio files
+.3ga        0;95
+.aac        0;95
+.aif        0;95
+.aiff       0;95
+.alac       0;95
+.amr        0;95
+.ape        0;95
+.flac       0;95
+.m4a        0;95
+.mka        0;95
+.mp3        0;95
+.oga        0;95
+.ogg        0;95
+.opus       0;95
+.spx        0;95
+.wav        0;95
+.wv         0;95
+# midi/mod and similar
+.it         0;95
+.mid        0;95
+.midi       0;95
+.mod        0;95
+.s3m        0;95
+.xm         0;95
+# playlists and similar
+.cue        0;95
+.m3u        0;95
+.pls        0;95
+.xspf       0;95
+# vector graphics
+.ai         0;95
+.cdr        0;95
+.dwf        0;95
+.dwg        0;95
+.emf        0;95
+.eps        0;95
+.pdf        0;95
+.ps         0;95
+.svg        0;95
+.svgz       0;95
+# raster graphics
+.avci       0;95
+.avcs       0;95
+.avif       0;95
+.avifs      0;95
+.bmp        0;95
+.gif        0;95
+.heic       0;95
+.heics      0;95
+.heif       0;95
+.heifs      0;95
+.jb2        0;95
+.jbig2      0;95
+.jpeg       0;95
+.jpg        0;95
+.pbm        0;95
+.pgm        0;95
+.png        0;95
+.pnm        0;95
+.ppm        0;95
+.psd        0;95
+.tga        0;95
+.tif        0;95
+.tiff       0;95
+.webp       0;95
+.xbm        0;95
+.xpm        0;95
+.xcf        0;95
+# font files
+.eot        0;95
+.otf        0;95
+.ttc        0;95
+.ttf        0;95
+.woff       0;95
+.woff2      0;95
+# video files
+.3g2        0;95
+.3gp        0;95
+.avi        0;95
+.flv        0;95
+.m4v        0;95
+.mkv        0;95
+.mov        0;95
+.mp4        0;95
+.mpeg       0;95
+.mpg        0;95
+.ogm        0;95
+.ogv        0;95
+.ogx        0;95
+.rm         0;95
+.rmvb       0;95
+.vob        0;95
+.webm       0;95
+.wmv        0;95
+
+# -----------------------------------------------------------------------------
+# Text files: source code, plain text, documents, etc.
+# -----------------------------------------------------------------------------
+# Text / document files
+.adoc       0;36
+.asc        0;36
+.azw        0;36
+.azw1       0;36
+.azw3       0;36
+.chm        0;36
+.doc        0;36
+.docx       0;36
+.dot        0;36
+.dotx       0;36
+.epub       0;36
+.hlp        0;36
+.htm        0;36
+.html       0;36
+.indd       0;36
+.log        0;36
+.ly         0;36
+.lytex      0;36
+.md         0;36
+.mobi       0;36
+.mscz       0;36
+.nb         0;36
+.nfo        0;36
+.odb        0;36
+.odf        0;36
+.odg        0;36
+.odm        0;36
+.odp        0;36
+.ods        0;36
+.odt        0;36
+.otg        0;36
+.oth        0;36
+.otp        0;36
+.ots        0;36
+.ott        0;36
+.pfm        0;36
+.pgl        0;36
+.ppt        0;36
+.pptx       0;36
+.rst        0;36
+.sib        0;36
+.tex        0;36
+.txt        0;36
+.vcard      0;36
+.xls        0;36
+.xlsx       0;36
+.xlt        0;36
+.xltx       0;36
+# Source code
+.ada        0;36
+.asm        0;36
+.awk        0;36
+.bat        0;36
+.c          0;36
+.c++        0;36
+.cc         0;36
+.cfg        0;36
+.cls        0;36
+.cmd        0;36
+.cnf        0;36
+.conf       0;36
+.cpp        0;36
+.cs         0;36
+.css        0;36
+.csv        0;36
+.cxx        0;36
+.dart       0;36
+.dtd        0;36
+.go         0;36
+.h          0;36
+.h++        0;36
+.hh         0;36
+.hpp        0;36
+.hs         0;36
+.hxx        0;36
+.inc        0;36
+.ini        0;36
+.java       0;36
+.js         0;36
+.json       0;36
+.jsp        0;36
+.jsx        0;36
+.kt         0;36
+.lisp       0;36
+.lua        0;36
+.m          0;36
+.m4         0;36
+.p          0;36
+.pas        0;36
+.php        0;36
+.pl         0;36
+.proto      0;36
+.py         0;36
+.rb         0;36
+.s          0;36
+.S          0;36
+.scheme     0;36
+.sh         0;36
+.sql        0;36
+.toml       0;36
+.ts         0;36
+.tsx        0;36
+.xml        0;36
+.xslt       0;36
+.yml        0;36
+.zsh        0;36
+
+# -----------------------------------------------------------------------------
+# Backups / parts / temporary etc
+# -----------------------------------------------------------------------------
+*~          0;90
+*#          0;90
+.bkp        0;90
+.bak        0;90
+.old        0;90
+.orig       0;90
+.part       0;90
+.rej        0;90
+.swp        0;90
+.tmp        0;90
+.pacsave    0;90
+.dpkg-old   0;90
+.ucf-dist   0;90
+.ucf-old    0;90
+.rpmorig    0;90
+.rpmsave    0;90
+DIR_COLORS
+
 
 # vim: set ts=2 sw=2 tw=100 et :
