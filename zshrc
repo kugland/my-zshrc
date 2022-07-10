@@ -148,7 +148,7 @@ readonly HISTSIZE SAVEHIST HISTFILE                 # Make the variables readonl
 () {
   local update_interval=$(( 2 * 24 * 60 * 60 ))      # Update interval in seconds (2 days).
   local zshrc_mtime=$(zstat +mtime ~/.zshrc)         # Get modification time of /etc/zshrc.
-  local zshrc_url=https://gitlab.com/kugland/my-zshrc/-/raw/master/zshrc  # URL of zshrc.
+  local zshrc_url=https://raw.githubusercontent.com/kugland/my-zshrc/master/zshrc  # URL of zshrc.
   if (( (zshrc_mtime + update_interval) < $(date '+%s') )) {
     {
       print -Pnr $'%B%0F[%b%fzshrc%B%0F]%b%f %F{green}Updating zshrc\e[0m ... '
