@@ -815,7 +815,7 @@ nmed() {
 }
 
 # sshfs-sudo - mount sshfs remote with root privileges using sudo ------------------------------- #
-if [[ -n ${commands[sudo]} ]] {
+if [[ -n ${commands[sshfs]} ]] {
   sshfs-sudo() {
     # The sftp_server option sed's through /etc/ssh/ssh_config to find the sftp server, and then
     # runs it with sudo.
