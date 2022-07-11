@@ -819,7 +819,9 @@ if [[ -n ${commands[sudo]} ]] {
   sshfs-sudo() {
     # The sftp_server option sed's through /etc/ssh/ssh_config to find the sftp server, and then
     # runs it with sudo.
-    sshfs -o sftp_server='/usr/bin/env sudo "$(sed -nE "/^[[:blank:]]*[Ss][Uu][Bb][Ss][Yy][Ss][Tt][Ee][Mm][[:blank:]]+sftp[[:blank:]]+/{s///;s/[[:blank:]]*(|#.*)$//;p;q}" /etc/ssh/sshd_config)"' "$@"
+    sshfs -o sftp_server='/usr/bin/env sudo "$(sed -nE "/^[[:blank:]]*[Ss][Uu][Bb][Ss][Yy][Ss]'\
+'[Tt][Ee][Mm][[:blank:]]+sftp[[:blank:]]+/{s///;s/[[:blank:]]*(|#.*)$//;p;q}" '\
+'/etc/ssh/sshd_config)"' "$@"
   }
 }
 # ----------------------------------------------------------------------------------------------- #
