@@ -784,6 +784,22 @@ add-zsh-hook zshexit __ZSHRC__zshexit_exit_message
 # [ COMMANDS ]----------------------------------------------------------------------------------- #
 # Functions and aliases.
 
+# Customize and colorize some commands ---------------------------------------------------------- #
+# Set the default flags for ls:
+#   -h: human readable sizes (e.g. 1K 2M 4G)
+#   --color=auto: use colors when output is a terminal
+#   --indicator-style=slash: use a slash to indicate directories
+#   --time-style=long-iso: show times in long ISO format (e.g. 2017-01-01 12:00)
+alias ls='command ls -h --color=auto --indicator-style=slash --time-style=long-iso'
+() {
+  local g
+  for g ({{,bz,lz,zstd,xz}{,e,f},pcre{,2}}grep) {   # Add colors to grep and friends.
+    [[ -n ${commands[$g]} ]] && alias "$g=command $g --color=auto"
+  }
+}
+alias diff='command diff --color=auto'              # Add colors to diff command.
+alias ip='command ip --color=auto'                  # Add colors to ip command.
+
 # nmed - use vared to rename a file ------------------------------------------------------------- #
 nmed() {
   local old=$1
@@ -798,22 +814,14 @@ nmed() {
   }
 }
 
-# Customize and colorize some commands ---------------------------------------------------------- #
-# Set the default flags for ls:
-#   -h: human readable sizes (e.g. 1K 2M 4G)
-#   --color=auto: use colors when output is a terminal
-#   --indicator-style=slash: use a slash to indicate directories
-#   --time-style=long-iso: show times in long ISO format (e.g. 2017-01-01 12:00)
-alias ls='command ls -h --color=auto --indicator-style=slash --time-style=long-iso'
-() {
-  local g
-  for g ({{,bz,lz,zstd,xz}{,e,f},pcre{,2}}grep) {   # Add colors to grep and friends.
-    [[ -n ${commands[$g]} ]] && alias "$g=command $g --color=auto"
+# sshfs-sudo - mount sshfs remote with root privileges using sudo ------------------------------- #
+if [[ -n ${commands[sudo]} ]] {
+  sshfs-sudo() {
+    # The sftp_server option sed's through /etc/ssh/ssh_config to find the sftp server, and then
+    # runs it with sudo.
+    sshfs -o sftp_server='/usr/bin/env sudo "$(sed -nE "/^[[:blank:]]*[Ss][Uu][Bb][Ss][Yy][Ss][Tt][Ee][Mm][[:blank:]]+sftp[[:blank:]]+/{s///;s/[[:blank:]]*(|#.*)$//;p;q}" /etc/ssh/sshd_config)"' "$@"
   }
 }
-
-alias diff='command diff --color=auto'              # Add colors to diff command.
-alias ip='command ip --color=auto'                  # Add colors to ip command.
 # ----------------------------------------------------------------------------------------------- #
 
 
