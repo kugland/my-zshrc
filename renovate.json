@@ -6,7 +6,8 @@
     "regexManagers": [{
         "fileMatch": ["^zshrc$"],
         "matchStrings": [
-            "\n\\s*# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\n.*?_VERSION=(?<currentValue>.*)\n"
+            "\n\\s*# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\n.*?_VERSION=(?<currentValue>.*)\n",
+            "\n\\s*# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?) branch=(?<currentValue>.*?)( versioning=(?<versioning>.*?))?\n.*?_DIGEST=(?<currentDigest>.*)\n"
         ],
         "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
     }]
