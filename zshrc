@@ -911,7 +911,7 @@ __ZSHRC__dependency \
 
 
 # [ UNSET UNNEEDED VARIABLES AND FUNCTIONS ]----------------------------------------------------- #
-unset ZSH_HISTORY_SUBSTR_SEARCH_VERSION
+unset ZSH_HISTORY_SUBSTR_SEARCH_DIGEST
 unset ZSH_SYNTAX_HIGHLIGHTING_VERSION
 unset ZSH_COMPLETIONS_VERSION
 unset -f __ZSHRC__bindkeys
