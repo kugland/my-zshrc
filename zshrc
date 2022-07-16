@@ -192,7 +192,7 @@ __ZSHRC__ssh_session=${${SSH_CONNECTION:+1}:-0}
 # sshd as an ancestor process. This will fail for non-root users if /proc was mounted with
 # hidepid=2.
 if ! ((__ZSHRC__ssh_session)) {
-  __ZSHRC__is_sshd_my_ancestor() {
+  () {
     local IFS=' '                                   # This is needed to split /proc/<pid>/stat.
     local pid=$$                                    # The current process ID.
     local exe                                       # Basename of the executable.
@@ -203,9 +203,7 @@ if ! ((__ZSHRC__ssh_session)) {
       [[ $exe = sshd ]] && return 0                 # sshd process is our ancestor, return true.
     }
     return 1
-  }
-  __ZSHRC__is_sshd_my_ancestor && __ZSHRC__ssh_session=1
-  unset -f __ZSHRC__is_sshd_my_ancestor
+  } && __ZSHRC__ssh_session=1
 }
 readonly __ZSHRC__ssh_session
 # ----------------------------------------------------------------------------------------------- #
