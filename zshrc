@@ -153,7 +153,7 @@ readonly HISTSIZE SAVEHIST HISTFILE                 # Make the variables readonl
   if (( (zshrc_mtime + update_interval) < $(date '+%s') )) {
     {
       print -Pnr $'%B%0F[%b%fzshrc%B%0F]%b%f %F{green}Updating zshrc\e[0m ... '
-      curl -sSL $zshrc_url >/tmp/zsh-$UID/zshrc-new || { error=1; return }
+      2>/dev/null curl -sSL $zshrc_url >/tmp/zsh-$UID/zshrc-new || { error=1; return }
       mv /tmp/zsh-$UID/zshrc-new ~/.zshrc || { error=1; return }
     } always {
       if (( error )) {
