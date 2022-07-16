@@ -149,13 +149,14 @@ readonly HISTSIZE SAVEHIST HISTFILE                 # Make the variables readonl
   local update_interval=$(( 2 * 24 * 60 * 60 ))      # Update interval in seconds (2 days).
   local zshrc_mtime=$(zstat +mtime ~/.zshrc)         # Get modification time of /etc/zshrc.
   local zshrc_url=https://raw.githubusercontent.com/kugland/my-zshrc/master/zshrc  # URL of zshrc.
+  local error=0
   if (( (zshrc_mtime + update_interval) < $(date '+%s') )) {
     {
       print -Pnr $'%B%0F[%b%fzshrc%B%0F]%b%f %F{green}Updating zshrc\e[0m ... '
-      curl -sSL $zshrc_url >/tmp/zsh-$UID/zshrc-new || return 1
-      mv /tmp/zsh-$UID/zshrc-new ~/.zshrc || return 1
+      curl -sSL $zshrc_url >/tmp/zsh-$UID/zshrc-new || { error=1; return }
+      mv /tmp/zsh-$UID/zshrc-new ~/.zshrc || { error=1; return }
     } always {
-      if (( TRY_BLOCK_ERROR )) {
+      if (( error )) {
         print -P '%B%F{red}failed%b%f'
       } else {
         print -P '%B%F{green}OK%b%f'
@@ -840,17 +841,18 @@ __ZSHRC__dependency() {
   local tarball_url=$2
   local version=${${$(print -n $tarball_url | sha256sum)[1]}[1,16]}
   local pkgid=$name-$version
+  local error=0
 
   [[ -d ~/.zshrc-deps ]] || mkdir ~/.zshrc-deps || return 1
   if [[ ! -d ~/.zshrc-deps/$pkgid ]] {
     {
       print -Pnr $'%B%0F[%b%fzshrc%B%0F]%b%f %F{green}Installing dependency \e[0;4m$name\e[0m ... '
-      curl -sSL -o ~/.zshrc-deps/${pkgid}.tar.gz $tarball_url || return 1
-      tar --transform "s,^[^/]*,$pkgid,g" -xzf ~/.zshrc-deps/${pkgid}.tar.gz -C ~/.zshrc-deps || return 1
+      2>/dev/null curl -sSL -o ~/.zshrc-deps/${pkgid}.tar.gz $tarball_url || { error=1; return }
+      tar --transform "s,^[^/]*,$pkgid,g" -xzf ~/.zshrc-deps/${pkgid}.tar.gz -C ~/.zshrc-deps || { error=1; return }
       rm ~/.zshrc-deps/${pkgid}.tar.gz
-      ln -s $pkgid ~/.zshrc-deps/$name || return 1
+      ln -s $pkgid ~/.zshrc-deps/$name || { error=1; return }
     } always {
-      if (( TRY_BLOCK_ERROR )) {
+      if (( error )) {
         print -P '%B%F{red}failed%b%f'
       } else {
         print -P '%B%F{green}OK%b%f'
