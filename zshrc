@@ -145,26 +145,26 @@ readonly HISTSIZE SAVEHIST HISTFILE                 # Make the variables readonl
 
 
 # [ AUTO-UPDATE ZSHRC ]-------------------------------------------------------------------------- #
-() {
-  local update_interval=$(( 2 * 24 * 60 * 60 ))      # Update interval in seconds (2 days).
-  local zshrc_mtime=$(zstat +mtime ~/.zshrc)         # Get modification time of /etc/zshrc.
-  local zshrc_url=https://raw.githubusercontent.com/kugland/my-zshrc/master/zshrc  # URL of zshrc.
-  local error=0
-  if (( (zshrc_mtime + update_interval) < $(date '+%s') )) {
-    {
-      print -Pnr $'%B%0F[%b%fzshrc%B%0F]%b%f %F{green}Updating zshrc\e[0m ... '
-      2>/dev/null curl -sSL $zshrc_url >/tmp/zsh-$UID/zshrc-new || { error=1; return }
-      mv /tmp/zsh-$UID/zshrc-new ~/.zshrc || { error=1; return }
-    } always {
-      if (( error )) {
-        print -P '%B%F{red}failed%b%f'
-      } else {
-        print -P '%B%F{green}OK%b%f'
-        exec zsh -lsi
-      }
-    }
-  }
-}
+# () {
+#   local update_interval=$(( 2 * 24 * 60 * 60 ))      # Update interval in seconds (2 days).
+#   local zshrc_mtime=$(zstat +mtime ~/.zshrc)         # Get modification time of /etc/zshrc.
+#   local zshrc_url=https://raw.githubusercontent.com/kugland/my-zshrc/master/zshrc  # URL of zshrc.
+#   local error=0
+#   if (( (zshrc_mtime + update_interval) < $(date '+%s') )) {
+#     {
+#       print -Pnr $'%B%0F[%b%fzshrc%B%0F]%b%f %F{green}Updating zshrc\e[0m ... '
+#       2>/dev/null curl -sSL $zshrc_url >/tmp/zsh-$UID/zshrc-new || { error=1; return }
+#       mv /tmp/zsh-$UID/zshrc-new ~/.zshrc || { error=1; return }
+#     } always {
+#       if (( error )) {
+#         print -P '%B%F{red}failed%b%f'
+#       } else {
+#         print -P '%B%F{green}OK%b%f'
+#         exec zsh -lsi
+#       }
+#     }
+#   }
+# }
 # ----------------------------------------------------------------------------------------------- #
 
 
