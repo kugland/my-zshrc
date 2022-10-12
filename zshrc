@@ -508,6 +508,11 @@ myzshrc_prompt_precmd() {
   RPROMPT+="%(0?..  $error_indicator)"
   RPROMPT+=$gitstatus_prompt
 
+  # Indicate Python venv in the RPROMPT.
+  if [[ -n $VIRTUAL_ENV ]] {
+    RPROMPT+=$' %F{#4b8bbe}(venv %F{#ffe873}'"$(basename "%F{blue}$VIRTUAL_ENV")"$'%F{#4b8bbe})%f'
+  }
+
   PS2=''; for level ({1..16}) { PS2+="%(${level}_.${continuation}.)" }; PS2+=' '
 
   # RPS2 will be type of the current open block (if, while, for, etc.)
