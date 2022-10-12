@@ -197,6 +197,7 @@ if ! ((__ZSHRC__ssh_session)) {
     local pid=$$                                    # The current process ID.
     local exe                                       # Basename of the executable.
     while ((pid > 1)) {                             # Continue until we reach the init process.
+      test -d /proc/$pid || break                   # Give up if the directory doesn't exist.
       pid=${${=${"${:-$(</proc/$pid/stat)}"/*) /}}[2]} # Get the parent process ID.
       exe=${${:-/proc/$pid/exe}:A:t}                # Get the basename of its executable.
       [[ $exe = exe ]] && return 1                  # Path canonicalization fail, return false.
