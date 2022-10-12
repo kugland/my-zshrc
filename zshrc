@@ -706,11 +706,17 @@ __ZSHRC__fancy_prompt() {
 # The fancy prompt will be used if the terminal is a virtual TTY, X11 is available, we're using
 # a UTF-8 locale, we're not in a SSH session, and the terminal supports 8-bit colors; otherwise
 # the simple prompt will be used.
-[[ $TTY = /dev/pts/* ]] \
-  && [[ $LANG = *UTF-8* ]] \
-  && ! ((__ZSHRC__ssh_session)) \
-  && ((__ZSHRC__color8bit)) \
-  && __ZSHRC__fancy_prompt || __ZSHRC__simple_prompt
+if [[ $ZSHRC_PROMPT == simple ]] {
+  __ZSHRC__simple_prompt
+} elif [[ $ZSHRC_PROMPT == fancy ]] {
+  __ZSHRC__fancy_prompt
+} else {
+  [[ $TTY = /dev/pts/* ]] \
+    && [[ $LANG = *UTF-8* ]] \
+    && ! ((__ZSHRC__ssh_session)) \
+    && ((__ZSHRC__color8bit)) \
+    && __ZSHRC__fancy_prompt || __ZSHRC__simple_prompt
+}
 # ----------------------------------------------------------------------------------------------- #
 
 
