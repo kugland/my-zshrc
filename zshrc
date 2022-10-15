@@ -480,11 +480,7 @@ myzshrc_prompt_precmd() {
 
   ((__ZSHRC__ssh_session)) && PS1=$ssh_indicator || PS1=''
   PS1+="${before_userhost}%(!..%n@)%m${before_path}"
-  if [[ $prompt_type == 'simple' ]] {
-    PS1+='%~'
-  } else {
-    PS1+="${${${(%)${:-%~}}//\//  }//\%/%%}"
-  }
+  PS1+='%~'
   PS1+="${after_path}"
 
   RPROMPT="\${__ZSHRC__overwrite_prompt}"
