@@ -460,10 +460,12 @@ add-zsh-hook preexec __ZSHRC__preexec_overwrite
 myzshrc_prompt_precmd() {
   __ZSHRC__reset_terminal
 
-  local before_userhost before_path after_path \
+  local prompt_type \
+        before_userhost before_path after_path \
         ssh_indicator overwrite_indicator jobs_indicator error_indicator \
         continuation eol_mark gitstatus_prompt
 
+  zstyle -s ':myzshrc:prompt' prompt-type prompt_type
   zstyle -s ':myzshrc:prompt' before-userhost before_userhost
   zstyle -s ':myzshrc:prompt' before-path before_path
   zstyle -s ':myzshrc:prompt' after-path after_path
@@ -477,7 +479,13 @@ myzshrc_prompt_precmd() {
   __ZSHRC__gitstatus_prompt_update
 
   ((__ZSHRC__ssh_session)) && PS1=$ssh_indicator || PS1=''
-  PS1+="${before_userhost}%(!..%n@)%m${before_path}%~${after_path}"
+  PS1+="${before_userhost}%(!..%n@)%m${before_path}"
+  if [[ $prompt_type == 'simple' ]] {
+    PS1+='%~'
+  } else {
+    PS1+="${${${(%)${:-%~}}//\//  }//\%/%%}"
+  }
+  PS1+="${after_path}"
 
   RPROMPT="\${__ZSHRC__overwrite_prompt}"
   RPROMPT+="%(1j.  $jobs_indicator.)"
@@ -633,6 +641,7 @@ if [[ -n ${commands[git]} && -r /usr/share/gitstatus/gitstatus.plugin.zsh ]] {
 # A simple prompt that will work nicely in a console with limited charset and only 16 colors,
 # such as the Linux console.
 __ZSHRC__simple_prompt() {
+  zstyle ':myzshrc:prompt' prompt-type 'simple'
   zstyle ':myzshrc:prompt' before-userhost '%B%F{%(!.1.2)}'
   zstyle ':myzshrc:prompt' before-path '%f%b:%B%4F'
   zstyle ':myzshrc:prompt' after-path '%f%b%# '
@@ -659,7 +668,7 @@ __ZSHRC__simple_prompt() {
 # Completely unnecessary, but I like it.
 # This prompt requires Nerd Fonts (https://www.nerdfonts.com/).
 __ZSHRC__fancy_prompt() {
-  # For the main prompt.
+  zstyle ':myzshrc:prompt' prompt-type 'fancy'
   local userhost_color='%(!.#b24742.#47a730)'
   zstyle ':myzshrc:prompt' before-userhost "%K{$userhost_color}%B%7F "
   zstyle ':myzshrc:prompt' before-path '%b%F{'$userhost_color$'}%K{#547bb5}\uE0B4 %B%7F'
