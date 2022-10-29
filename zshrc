@@ -791,6 +791,7 @@ alias ls='command ls -h --color=auto --indicator-style=slash --time-style=long-i
 }
 alias diff='command diff --color=auto'              # Add colors to diff command.
 alias ip='command ip --color=auto'                  # Add colors to ip command.
+[[ -n ${commands[doas]} ]] && alias sudo=doas       # Alias sudo to doas.
 
 # nmed - use vared to rename a file ------------------------------------------------------------- #
 nmed() {
