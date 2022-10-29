@@ -25,8 +25,6 @@ zmodload -F zsh/stat b:zstat
 
 
 # [ SOME SANE DEFAULTS ]------------------------------------------------------------------------- #
-umask 0022                                          # As much as I'd like to use 0077, it always
-                                                    # causes some problems for me.
 export EDITOR=vim                                   # Use vim as the default editor.
 export GPG_TTY=$TTY                                 # Set the TTY for GPG pinentry.
 
