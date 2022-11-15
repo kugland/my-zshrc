@@ -25,8 +25,6 @@ zmodload -F zsh/stat b:zstat
 
 
 # [ SOME SANE DEFAULTS ]------------------------------------------------------------------------- #
-umask 0022                                          # As much as I'd like to use 0077, it always
-                                                    # causes some problems for me.
 export EDITOR=vim                                   # Use vim as the default editor.
 export GPG_TTY=$TTY                                 # Set the TTY for GPG pinentry.
 
@@ -791,7 +789,6 @@ alias ls='command ls -h --color=auto --indicator-style=slash --time-style=long-i
 }
 alias diff='command diff --color=auto'              # Add colors to diff command.
 alias ip='command ip --color=auto'                  # Add colors to ip command.
-[[ -n ${commands[doas]} ]] && alias sudo=doas       # Alias sudo to doas.
 
 # nmed - use vared to rename a file ------------------------------------------------------------- #
 nmed() {
