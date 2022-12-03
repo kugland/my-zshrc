@@ -792,15 +792,18 @@ alias ip='command ip --color=auto'                  # Add colors to ip command.
 
 # nmed - use vared to rename a file ------------------------------------------------------------- #
 nmed() {
-  local old=$1
-  local new=$1
-  if [[ -e $old ]] {
-    print -Pn '%B%F{cyan}Old name%b:%f %B'
-    print -r -- $old
-    vared -e -p '%B%F{cyan}New name%b:%f %B' new \
-      && print -Pn '%b' && mv -i -v -- $old $new
-  } else {
-    >&2 print -r "nmed: \`$old': File not found."
+  local fname
+  for fname ("$@") {
+    local old=$fname
+    local new=$fname
+    if [[ -e $old ]] {
+      print -Pn '%B%F{cyan}Old name%b:%f %B'
+      print -r -- $old
+      vared -e -p '%B%F{cyan}New name%b:%f %B' new \
+        && print -Pn '%b' && mv -i -v -- $old $new
+    } else {
+      >&2 print -r "nmed: \`$old': File not found."
+    }
   }
 }
 
