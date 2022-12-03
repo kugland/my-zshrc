@@ -985,6 +985,7 @@ EXEC        1;32      # files with execute permission.
 .tar        0;91
 .tbz2       0;91
 .tgz        0;91
+.tpxz       0;91
 .txz        0;91
 .tz         0;91
 .tzst       0;91
