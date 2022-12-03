@@ -789,6 +789,8 @@ alias ls='command ls -h --color=auto --indicator-style=slash --time-style=long-i
 }
 alias diff='command diff --color=auto'              # Add colors to diff command.
 alias ip='command ip --color=auto'                  # Add colors to ip command.
+[[ -n $commands[python3] && -z $commands[python] ]] \
+    && alias python=python3                         # Alias python to python3 when not found
 
 # nmed - use vared to rename a file ------------------------------------------------------------- #
 nmed() {
