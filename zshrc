@@ -458,45 +458,50 @@ add-zsh-hook preexec __ZSHRC__preexec_overwrite
 myzshrc_prompt_precmd() {
   __ZSHRC__reset_terminal
 
-  local prompt_type \
-        before_userhost before_path after_path \
-        ssh_indicator overwrite_indicator jobs_indicator error_indicator \
-        continuation eol_mark gitstatus_prompt
+  if [[ -n $BASIC_PROMPT && $BASIC_PROMPT -eq 1 ]] {
+    PS1='%% '                                       # Basic prompt, e.g. for screenshots
+    PS2='> '
+    RPROMPT=''
+  } else {
+    local prompt_type \
+          before_userhost before_path after_path \
+          ssh_indicator overwrite_indicator jobs_indicator error_indicator \
+          continuation eol_mark gitstatus_prompt
 
-  zstyle -s ':myzshrc:prompt' prompt-type prompt_type
-  zstyle -s ':myzshrc:prompt' before-userhost before_userhost
-  zstyle -s ':myzshrc:prompt' before-path before_path
-  zstyle -s ':myzshrc:prompt' after-path after_path
-  zstyle -s ':myzshrc:prompt' ssh-indicator ssh_indicator
-  zstyle -s ':myzshrc:prompt' overwrite-indicator overwrite_indicator
-  zstyle -s ':myzshrc:prompt' jobs-indicator jobs_indicator
-  zstyle -s ':myzshrc:prompt' error-indicator error_indicator
-  zstyle -s ':myzshrc:prompt' continuation continuation
-  zstyle -s ':myzshrc:prompt' eol-mark eol_mark
+    zstyle -s ':myzshrc:prompt' prompt-type prompt_type
+    zstyle -s ':myzshrc:prompt' before-userhost before_userhost
+    zstyle -s ':myzshrc:prompt' before-path before_path
+    zstyle -s ':myzshrc:prompt' after-path after_path
+    zstyle -s ':myzshrc:prompt' ssh-indicator ssh_indicator
+    zstyle -s ':myzshrc:prompt' overwrite-indicator overwrite_indicator
+    zstyle -s ':myzshrc:prompt' jobs-indicator jobs_indicator
+    zstyle -s ':myzshrc:prompt' error-indicator error_indicator
+    zstyle -s ':myzshrc:prompt' continuation continuation
+    zstyle -s ':myzshrc:prompt' eol-mark eol_mark
 
-  __ZSHRC__gitstatus_prompt_update
+    __ZSHRC__gitstatus_prompt_update
 
-  ((__ZSHRC__ssh_session)) && PS1=$ssh_indicator || PS1=''
-  PS1+="${before_userhost}%(!..%n@)%m${before_path}"
-  PS1+='%~'
-  PS1+="${after_path}"
+    ((__ZSHRC__ssh_session)) && PS1=$ssh_indicator || PS1=''
+    PS1+="${before_userhost}%(!..%n@)%m${before_path}"
+    PS1+='%~'
+    PS1+="${after_path}"
 
-  RPROMPT="\${__ZSHRC__overwrite_prompt}"
-  RPROMPT+="%(1j.  $jobs_indicator.)"
-  RPROMPT+="%(0?..  $error_indicator)"
-  RPROMPT+=$gitstatus_prompt
+    RPROMPT="\${__ZSHRC__overwrite_prompt}"
+    RPROMPT+="%(1j.  $jobs_indicator.)"
+    RPROMPT+="%(0?..  $error_indicator)"
+    RPROMPT+=$gitstatus_prompt
 
-  # Indicate Python venv in the RPROMPT.
-  if [[ -n $VIRTUAL_ENV ]] {
-    RPROMPT+=$' %F{#4b8bbe}(venv %F{#ffe873}'"$(basename "%F{blue}$VIRTUAL_ENV")"$'%F{#4b8bbe})%f'
+    # Indicate Python venv in the RPROMPT.
+    if [[ -n $VIRTUAL_ENV ]] {
+      RPROMPT+=$' %F{#4b8bbe}(venv %F{#ffe873}'"$(basename "%F{blue}$VIRTUAL_ENV")"$'%F{#4b8bbe})%f'
+    }
+
+    PS2=''; for level ({1..16}) { PS2+="%(${level}_.${continuation}.)" }; PS2+=' '
+
+    # RPS2 will be type of the current open block (if, while, for, etc.)
+    # Make RPS2 show [cont] when we're in a continuation line (the previous line ended with '\').
+    RPS2='%B%F{black}[%f%b${${(%):-%^}//(#s)(#e)/cont}%B%F{black}]%f%b'
   }
-
-  PS2=''; for level ({1..16}) { PS2+="%(${level}_.${continuation}.)" }; PS2+=' '
-
-  # RPS2 will be type of the current open block (if, while, for, etc.)
-  # Make RPS2 show [cont] when we're in a continuation line (the previous line ended with '\').
-  RPS2='%B%F{black}[%f%b${${(%):-%^}//(#s)(#e)/cont}%B%F{black}]%f%b'
-
   PROMPT_EOL_MARK=${eol_mark}
 }
 
