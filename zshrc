@@ -531,6 +531,7 @@ if [[ ${ZSHRC_PROMPT:=''} == simple ]] {
 # Precmd hook that resets the terminal and updates the prompt.
 myzshrc_prompt_precmd() {
   __ZSHRC__reset_terminal
+
   if (( ${BASIC_PROMPT:-0} )) {
     PS1='%# '                                       # Basic prompt, e.g. for screenshots
     PS2='> '
@@ -554,14 +555,12 @@ myzshrc_prompt_precmd() {
 
     __ZSHRC__gitstatus_prompt_update
 
-    PS1=$'%{\e]133;A\e\\%}'     # Prompt start.
-    ((__ZSHRC__ssh_session)) && PS1+=$ssh_indicator
+    ((__ZSHRC__ssh_session)) && PS1=$ssh_indicator || PS1=''
     PS1+="${before_userhost}%(!..%n@)%m${before_path}"
     PS1+='%~'
     PS1+="${after_path}"
 
-    RPROMPT=$'%{\e]133;P;k=r\e\\%}'             # Right prompt start.
-    RPROMPT+="\${__ZSHRC__overwrite_prompt}"
+    RPROMPT="\${__ZSHRC__overwrite_prompt}"
     RPROMPT+="%(1j.  $jobs_indicator.)"
     RPROMPT+="%(0?..  $error_indicator)"
     RPROMPT+=$gitstatus_prompt
@@ -572,23 +571,16 @@ myzshrc_prompt_precmd() {
     }
 
     local level
-    PS2=$'%{\e]133;P;k=s\e\\%}'                 # Prompt continuation start.
-    for level ({1..16}) { PS2+="%(${level}_.${continuation}.)" }; PS2+=' '
+    PS2=''; for level ({1..16}) { PS2+="%(${level}_.${continuation}.)" }; PS2+=' '
 
     # RPS2 will be type of the current open block (if, while, for, etc.)
     # Make RPS2 show [cont] when we're in a continuation line (the previous line ended with '\').
-    RPS2=$'%{\e]133;P;k=r\e\\%}'                # Right prompt continuation start.
-    RPS2+='%B%F{black}[%f%b${${(%):-%^}//(#s)(#e)/cont}%B%F{black}]%f%b'
+    RPS2='%B%F{black}[%f%b${${(%):-%^}//(#s)(#e)/cont}%B%F{black}]%f%b'
   }
   PROMPT_EOL_MARK=${eol_mark}
 }
 
-myzhsrc_prompt_preexec() {
-  print -Prn $'%{\e]133;C\e\\%}'                    # Start of output.
-}
-
 add-zsh-hook precmd myzshrc_prompt_precmd
-add-zsh-hook preexec myzhsrc_prompt_preexec
 
 # Window title ---------------------------------------------------------------------------------- #
 __ZSHRC__ellipsized_path_window_title() {
@@ -862,7 +854,7 @@ tmux() {
         command tmux "$@"
     } else {
         setopt local_options pipefail
-        RESPONSE=$( (tmux list-sessions -F $'\e[33m#{session_id}\e[0m\t#{=/13/…:#{p13:session_name}}\t#{session_windows}\t#{t/f/%Y-%m-%d %H#:%M#:%S/:session_created}' 2>/dev/null | sort -t$'\t' -k1.2n,4; echo $'\e[1;30m<Create new session>\e[0m') | fzf -1 --ansi --margin=30%,$(( ( (COLUMNS / 2 - 29) < 0 ) ? 0 : (COLUMNS / 2 - 29) )) --prompt='⟩ ' --pointer='➤' --border=rounded --header $'id\tname\t\t#win\tcreated' --layout=reverse --info=hidden | sed -E 's,\t.*,,g' )
+        RESPONSE=$( (tmux list-sessions -F $'\033[33m#{session_id}\033[0m\t#{=/13/…:#{p13:session_name}}\t#{session_windows}\t#{t/f/%Y-%m-%d %H#:%M#:%S/:session_created}' 2>/dev/null | sort -t$'\t' -k1.2n,4; echo $'\033[1;30m<Create new session>\033[0m') | fzf -1 --ansi --margin=30%,$(( ( (COLUMNS / 2 - 29) < 0 ) ? 0 : (COLUMNS / 2 - 29) )) --prompt='⟩ ' --pointer='➤' --border=rounded --header $'id\tname\t\t#win\tcreated' --layout=reverse --info=hidden | sed -E 's,\t.*,,g' )
         if [[ $? -ne 0 ]] {
             return
         } elif [[ "$RESPONSE" = "<Create new session>" ]] {
