@@ -838,7 +838,7 @@ nmed() {
 
 # isodate - print the current date in ISO format ------------------------------------------------ #
 isodate() {
-  if [[ "$1" = "--utc" ]] {
+  if [[ "$1" = "-u" || "$1" = "--utc" ]] {
     print -r -- $(date -u +%Y-%m-%d)
   } else {
     print -r -- $(date +%Y-%m-%d)
@@ -847,7 +847,7 @@ isodate() {
 
 # isotime - print the current time in ISO format ------------------------------------------------ #
 isotime() {
-  if [[ "$1" = "--utc" ]] {
+  if [[ "$1" = "-u" || "$1" = "--utc" ]] {
     print -r -- $(date -u +%H:%M:%S)
   } else {
     print -r -- $(date +%H:%M:%S)
