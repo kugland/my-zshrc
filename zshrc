@@ -854,7 +854,7 @@ tmux() {
         command tmux "$@"
     } else {
         setopt local_options pipefail
-        RESPONSE=$((tmux list-sessions -F $'\033[33m#{session_id}\033[0m\t#{=/13/…:#{p13:session_name}}\t#{session_windows}\t#{t/f/%Y-%m-%d %H#:%M#:%S/:session_created}' 2>/dev/null | sort -t$'\t' -k1.2n,4; echo $'\033[1;30m<Create new session>\033[0m') | fzf -1 --ansi --margin=30%,$(( ((COLUMNS / 2 - 29) < 0) ? 0 : (COLUMNS / 2 - 29) )) --prompt='⟩ ' --pointer='➤' --border=rounded --header $'id\tname\t\t#win\tcreated' --layout=reverse --info=hidden | sed -E 's,\t.*,,g')
+        RESPONSE=$( (tmux list-sessions -F $'\033[33m#{session_id}\033[0m\t#{=/13/…:#{p13:session_name}}\t#{session_windows}\t#{t/f/%Y-%m-%d %H#:%M#:%S/:session_created}' 2>/dev/null | sort -t$'\t' -k1.2n,4; echo $'\033[1;30m<Create new session>\033[0m') | fzf -1 --ansi --margin=30%,$(( ( (COLUMNS / 2 - 29) < 0 ) ? 0 : (COLUMNS / 2 - 29) )) --prompt='⟩ ' --pointer='➤' --border=rounded --header $'id\tname\t\t#win\tcreated' --layout=reverse --info=hidden | sed -E 's,\t.*,,g' )
         if [[ $? -ne 0 ]] {
             return
         } elif [[ "$RESPONSE" = "<Create new session>" ]] {
