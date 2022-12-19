@@ -35,6 +35,7 @@ export GPG_TTY=$TTY                                 # Set the TTY for GPG pinent
 
   append_path() {
     local var=$1
+    local dir
     shift
     for dir ($@) {
       [[ ! -e $dir || -h $dir ]] && continue        # Skip if it doesn't exist or it is a symlink.
@@ -70,10 +71,7 @@ for script (/etc/profile.d/*.sh) {
   [[ -x "$script" ]] && emulate bash -c "source $script"  # Source script using bash emulation.
 }
 setopt no_null_glob
-# ----------------------------------------------------------------------------------------------- #
-
-
-# [ UNSET UNNEEDED FUNCTIONS ]------------------------------------------------------------------- #
+unset script
 unset -f append_path
 # ----------------------------------------------------------------------------------------------- #
 
@@ -186,8 +184,7 @@ readonly __ZSHRC__ssh_session
 
 # [ DETECT PUTTY ]------------------------------------------------------------------------------- #
 # Detect if we're running under PuTTY.
-[[ $TERM = putty* || $PUTTY = 1 ]]; __ZSHRC__putty=$(( ! $? ))
-
+[[ $TERM = putty* || ${PUTTY:-0} -eq 1 ]]; __ZSHRC__putty=$(( ! $? ))
 readonly __ZSHRC__putty
 # ----------------------------------------------------------------------------------------------- #
 
@@ -205,7 +202,7 @@ __ZSHRC__fstypecache_get() {
     __ZSHRC__fstypecache_hash=$current_hash         # Reset the cache.
     __ZSHRC__fstypecache=( )
   }
-  if [[ ${__ZSHRC__fstypecache[$PWD]} = "" ]] {     # If value if not found for $PWD, compute it.
+  if ! (( ${+__ZSHRC__fstypecache[$PWD]} )) {       # If value if not found for $PWD, compute it.
     __ZSHRC__fstypecache[$PWD]=$(findmnt -fn -d backward -o FSTYPE --target $PWD)
   }
   REPLY=${__ZSHRC__fstypecache[$PWD]}
@@ -240,6 +237,7 @@ __ZSHRC__reset_terminal() {
   print -nr ${terminfo[smkx]}                       # DECCKM & DECKPAM: use application mode.
 
   if [[ $TERM = linux ]] {                          # Color palette for Linux virtual console.
+    local idx rgb
     for idx rgb (
       0 050505  1 cc0000  2 4e9a06  3 c4a000        # Black, red, green, yellow
       4 3465a4  5 75507b  6 06989a  7 a8b3a8        # Blue, magenta, cyan, white
@@ -307,9 +305,10 @@ if [[ $TERM = rxvt* ]] {
 __ZSHRC__bindkeys() {
   local keys=$1
   local widget=$2
+  local key
   local IFS=' '                                     # Split keys by spaces.
   for key (${=keys}) {                              # Loop through the key sequences.
-    if [[ -n ${__ZSHRC__keys[$key]} ]] {            # If its a key from the __ZSHRC__keys array,
+    if (( ${+__ZSHRC__keys[$key]} )) {              # If its a key from the __ZSHRC__keys array,
       __ZSHRC__bindkeys "${__ZSHRC__keys[$key]}" $widget # Recurse.
     } else {
       bindkey $key $widget                          # Bind the key to the widget.
@@ -342,6 +341,7 @@ for widget keycodes (
   redo                              "^Y"
   history-incremental-search-backward "^R"
 ) { for keycode (${=keycodes}) { __ZSHRC__bindkeys $keycode $widget } }
+unset widget keycodes keycode
 
 # Send break (Ctrl+D) --------------------------------------------------------------------------- #
 # This widget allows Ctrl+D to work even when the buffer is not empty. Pressing Ctrl+D twice on
@@ -380,6 +380,7 @@ if [[ $TERM != linux ]] {
     __ZSHRC__backward_delete_word   CtrlBackspace
     __ZSHRC__forward_delete_word    CtrlDelete
   ) { zle -N $widget && __ZSHRC__bindkeys $keycode $widget }
+  unset widget keycode
 }
 
 # zle-line-init and zle-line-finish ------------------------------------------------------------ #
@@ -455,11 +456,84 @@ add-zsh-hook preexec __ZSHRC__preexec_overwrite
 # [ PROMPT SETUP ]------------------------------------------------------------------------------- #
 # That's the way I like it.
 
+# Simple prompt and fancy prompt ---------------------------------------------------------------- #
+# A simple prompt that will work nicely in a console with limited charset and only 16 colors,
+# such as the Linux console.
+__ZSHRC__simple_prompt() {
+  zstyle ':myzshrc:prompt' prompt-type 'simple'
+  zstyle ':myzshrc:prompt' before-userhost '%B%F{%(!.1.2)}'
+  zstyle ':myzshrc:prompt' before-path '%f%b:%B%4F'
+  zstyle ':myzshrc:prompt' after-path '%f%b%# '
+  zstyle ':myzshrc:prompt' ssh-indicator '%B%0F[%f%bssh%B%0F]%f%b '
+  zstyle ':myzshrc:prompt' overwrite-indicator '%K{4}%B%7F over %f%b%k'
+  zstyle ':myzshrc:prompt' jobs-indicator '%K{5}%B%7F %j job%(2j.s.) %f%b%k'
+  zstyle ':myzshrc:prompt' error-indicator '%K{1}%B%7F %? %f%b%k'
+  zstyle ':myzshrc:prompt' continuation '%B%0F» %f%b'
+  zstyle ':myzshrc:prompt' eol-mark '%B%0F·%f%b'
+  zstyle ':myzshrc:gitstatus' git-prefix '%B%1Fgit%f%b'
+  zstyle ':myzshrc:gitstatus' stash-count '%B%0F*'
+  zstyle ':myzshrc:gitstatus' staged-count '%B%2F+'
+  zstyle ':myzshrc:gitstatus' unstaged-count '%B%1F+'
+  zstyle ':myzshrc:gitstatus' untracked-count '%B%1F*'
+  zstyle ':myzshrc:gitstatus' commits-ahead '%6F%B↑'
+  zstyle ':myzshrc:gitstatus' commits-behind '%6F%B↓'
+  zstyle ':myzshrc:gitstatus' push-commits-ahead '%6F%B←'
+  zstyle ':myzshrc:gitstatus' push-commits-behind '%6F%B→'
+  zstyle ':myzshrc:gitstatus' action '%B%1F'
+  zstyle ':myzshrc:gitstatus' num-conflicted '%1F!%B'
+  __ZSHRC__indicator_overwrite                      # Update the overwrite indicator if needed.
+}
+
+# Completely unnecessary, but I like it.
+# This prompt requires Nerd Fonts (https://www.nerdfonts.com/).
+__ZSHRC__fancy_prompt() {
+  zstyle ':myzshrc:prompt' prompt-type 'fancy'
+  local userhost_color='%(!.#b24742.#47a730)'
+  zstyle ':myzshrc:prompt' before-userhost "%K{$userhost_color}%B%7F "
+  zstyle ':myzshrc:prompt' before-path '%b%F{'$userhost_color$'}%K{#547bb5}\uE0B4 %B%7F'
+  zstyle ':myzshrc:prompt' after-path '%b%F{#547bb5}%K{'$userhost_color$'}\uE0B4%k%F{'$userhost_color$'}\uE0B4%f '
+  zstyle ':myzshrc:prompt' ssh-indicator $'%K{238}%15F ssh %K{'$userhost_color$'}'
+  zstyle ':myzshrc:prompt' overwrite-indicator $'%4F\uE0B6%K{4}%B%7Fover%k%b%4F\uE0B4%f'
+  zstyle ':myzshrc:prompt' jobs-indicator $'%5F\uE0B6%K{5}%B%7F%j job%(2j.s.)%k%b%5F\uE0B4%f'
+  zstyle ':myzshrc:prompt' error-indicator $'%1F\uE0B6%K{1}%B%7F%?%k%b%1F\uE0B4%f'
+  zstyle ':myzshrc:prompt' continuation $'%B%0F\uf054%f%b'
+  zstyle ':myzshrc:prompt' eol-mark '%B%0Fﱢ%b%f'
+  zstyle ':myzshrc:gitstatus' git-prefix '%B%208F%f%b'
+  zstyle ':myzshrc:gitstatus' stash-count $'%245F\uf4a6%B%250F'
+  zstyle ':myzshrc:gitstatus' staged-count '%106F%B%154F'
+  zstyle ':myzshrc:gitstatus' unstaged-count '%167F%B%210F'
+  zstyle ':myzshrc:gitstatus' untracked-count $'%167F\uf005%B%210F'
+  zstyle ':myzshrc:gitstatus' commits-ahead '%36Fﰵ%B%86F'
+  zstyle ':myzshrc:gitstatus' commits-behind '%36Fﰬ%B%86F'
+  zstyle ':myzshrc:gitstatus' push-commits-ahead '%36Fﰯ%B%86F'
+  zstyle ':myzshrc:gitstatus' push-commits-behind '%36Fﰲ%B%86F'
+  zstyle ':myzshrc:gitstatus' action '%B%210F'
+  zstyle ':myzshrc:gitstatus' num-conflicted '%167F%B%210F'
+  __ZSHRC__indicator_overwrite                      # Update the overwrite indicator if needed.
+}
+
+# Select the prompt.
+# The fancy prompt will be used if the terminal is a virtual TTY, X11 is available, we're using
+# a UTF-8 locale, we're not in a SSH session, and the terminal supports 8-bit colors; otherwise
+# the simple prompt will be used.
+if [[ ${ZSHRC_PROMPT:=''} == simple ]] {
+  __ZSHRC__simple_prompt
+} elif [[ $ZSHRC_PROMPT == fancy ]] {
+  __ZSHRC__fancy_prompt
+} else {
+  [[ $TTY = /dev/pts/* ]] \
+    && [[ $LANG = *UTF-8* ]] \
+    && ! ((__ZSHRC__ssh_session)) \
+    && ((__ZSHRC__color8bit)) \
+    && __ZSHRC__fancy_prompt || __ZSHRC__simple_prompt
+}
+
+# Precmd hook that resets the terminal and updates the prompt.
 myzshrc_prompt_precmd() {
   __ZSHRC__reset_terminal
 
-  if [[ -n $BASIC_PROMPT && $BASIC_PROMPT -eq 1 ]] {
-    PS1='%% '                                       # Basic prompt, e.g. for screenshots
+  if (( ${BASIC_PROMPT:-0} )) {
+    PS1='%# '                                       # Basic prompt, e.g. for screenshots
     PS2='> '
     RPROMPT=''
   } else {
@@ -492,10 +566,11 @@ myzshrc_prompt_precmd() {
     RPROMPT+=$gitstatus_prompt
 
     # Indicate Python venv in the RPROMPT.
-    if [[ -n $VIRTUAL_ENV ]] {
+    if (( ${${VIRTUAL_ENV:+1}:-0} )) {
       RPROMPT+=$' %F{#4b8bbe}(venv %F{#ffe873}'"$(basename "%F{blue}$VIRTUAL_ENV")"$'%F{#4b8bbe})%f'
     }
 
+    local level
     PS2=''; for level ({1..16}) { PS2+="%(${level}_.${continuation}.)" }; PS2+=' '
 
     # RPS2 will be type of the current open block (if, while, for, etc.)
@@ -565,14 +640,37 @@ add-zsh-hook preexec __ZSHRC__preexec_window_title
 if [[ -n ${commands[git]} && -r /usr/share/gitstatus/gitstatus.plugin.zsh ]] {
   source /usr/share/gitstatus/gitstatus.plugin.zsh
 
+  __ZSHRC__is_git_repo() {
+    local curdir=$PWD
+    while [[ $curdir != "/" ]] {
+      if [[ -d $curdir/.git ]] {
+        return 0
+      }
+      curdir=${curdir:h}
+    }
+    return 1
+  }
+
   # Sets GITSTATUS_PROMPT to reflect the state of the current git repository.
-  function __ZSHRC__gitstatus_prompt_update() {
+  __ZSHRC__gitstatus_prompt_update() {
     gitstatus_prompt=''                             # Reset git status prompt.
+
+    : ${__ZSHRC__gitstatus_started:=0}
+    if (! __ZSHRC__is_git_repo) {
+      gitstatus_stop 'MY'                           # Stop gitstatusd instance with name "MY".
+      return
+    }
 
     __ZSHRC__fstypecache_get                        # Get the filesystem type of the current dir.
     if [[ $REPLY = (automount|fuse.sshfs|nfs) ]] {  # If it's a network filesystem,
-      return                                        # don't try to get git status.
+      gitstatus_stop 'MY'                           # stop gitstatusd instance with name "MY"
+      return                                        # and don't try to get git status.
     }
+
+    # Start gitstatusd instance with name "MY". The same name is passed to gitstatus_query in
+    # __ZSHRC__gitstatus_prompt_update. The flags with -1 as values enable staged, unstaged,
+    # conflicted and untracked counters.
+    gitstatus_start -s -1 -u -1 -c -1 -d -1 'MY'
 
     # Call gitstatus_query synchronously. Note that gitstatus_query can also be
     # called asynchronously; see documentation in gitstatus.plugin.zsh.
@@ -627,87 +725,10 @@ if [[ -n ${commands[git]} && -r /usr/share/gitstatus/gitstatus.plugin.zsh ]] {
 
     gitstatus_prompt="${p}"
   }
-
-  # Start gitstatusd instance with name "MY". The same name is passed to gitstatus_query in
-  # __ZSHRC__gitstatus_prompt_update. The flags with -1 as values enable staged, unstaged,
-  # conflicted and untracked counters.
-  gitstatus_stop 'MY' && gitstatus_start -s -1 -u -1 -c -1 -d -1 'MY'
 } else {
   __ZSHRC__gitstatus_prompt_update() {
     gitstatus_prompt=""
   }
-}
-
-# Simple prompt and fancy prompt ---------------------------------------------------------------- #
-# A simple prompt that will work nicely in a console with limited charset and only 16 colors,
-# such as the Linux console.
-__ZSHRC__simple_prompt() {
-  zstyle ':myzshrc:prompt' prompt-type 'simple'
-  zstyle ':myzshrc:prompt' before-userhost '%B%F{%(!.1.2)}'
-  zstyle ':myzshrc:prompt' before-path '%f%b:%B%4F'
-  zstyle ':myzshrc:prompt' after-path '%f%b%# '
-  zstyle ':myzshrc:prompt' ssh-indicator '%B%0F[%f%bssh%B%0F]%f%b '
-  zstyle ':myzshrc:prompt' overwrite-indicator '%K{4}%B%7F over %f%b%k'
-  zstyle ':myzshrc:prompt' jobs-indicator '%K{5}%B%7F %j job%(2j.s.) %f%b%k'
-  zstyle ':myzshrc:prompt' error-indicator '%K{1}%B%7F %? %f%b%k'
-  zstyle ':myzshrc:prompt' continuation '%B%0F» %f%b'
-  zstyle ':myzshrc:prompt' eol-mark '%B%0F·%f%b'
-  zstyle ':myzshrc:gitstatus' git-prefix '%B%1Fgit%f%b'
-  zstyle ':myzshrc:gitstatus' stash-count '%B%0F*'
-  zstyle ':myzshrc:gitstatus' staged-count '%B%2F+'
-  zstyle ':myzshrc:gitstatus' unstaged-count '%B%1F+'
-  zstyle ':myzshrc:gitstatus' untracked-count '%B%1F*'
-  zstyle ':myzshrc:gitstatus' commits-ahead '%6F%B↑'
-  zstyle ':myzshrc:gitstatus' commits-behind '%6F%B↓'
-  zstyle ':myzshrc:gitstatus' push-commits-ahead '%6F%B←'
-  zstyle ':myzshrc:gitstatus' push-commits-behind '%6F%B→'
-  zstyle ':myzshrc:gitstatus' action '%B%1F'
-  zstyle ':myzshrc:gitstatus' num-conflicted '%1F!%B'
-  __ZSHRC__indicator_overwrite                      # Update the overwrite indicator if needed.
-}
-
-# Completely unnecessary, but I like it.
-# This prompt requires Nerd Fonts (https://www.nerdfonts.com/).
-__ZSHRC__fancy_prompt() {
-  zstyle ':myzshrc:prompt' prompt-type 'fancy'
-  local userhost_color='%(!.#b24742.#47a730)'
-  zstyle ':myzshrc:prompt' before-userhost "%K{$userhost_color}%B%7F "
-  zstyle ':myzshrc:prompt' before-path '%b%F{'$userhost_color$'}%K{#547bb5}\uE0B4 %B%7F'
-  zstyle ':myzshrc:prompt' after-path '%b%F{#547bb5}%K{'$userhost_color$'}\uE0B4%k%F{'$userhost_color$'}\uE0B4%f '
-  zstyle ':myzshrc:prompt' ssh-indicator $'%K{238}%15F ssh %K{'$userhost_color$'}'
-  zstyle ':myzshrc:prompt' overwrite-indicator $'%4F\uE0B6%K{4}%B%7Fover%k%b%4F\uE0B4%f'
-  zstyle ':myzshrc:prompt' jobs-indicator $'%5F\uE0B6%K{5}%B%7F%j job%(2j.s.)%k%b%5F\uE0B4%f'
-  zstyle ':myzshrc:prompt' error-indicator $'%1F\uE0B6%K{1}%B%7F%?%k%b%1F\uE0B4%f'
-  zstyle ':myzshrc:prompt' continuation $'%B%0F\uf054%f%b'
-  zstyle ':myzshrc:prompt' eol-mark '%B%0Fﱢ%b%f'
-  zstyle ':myzshrc:gitstatus' git-prefix '%B%208F%f%b'
-  zstyle ':myzshrc:gitstatus' stash-count $'%245F\uf4a6%B%250F'
-  zstyle ':myzshrc:gitstatus' staged-count '%106F%B%154F'
-  zstyle ':myzshrc:gitstatus' unstaged-count '%167F%B%210F'
-  zstyle ':myzshrc:gitstatus' untracked-count $'%167F\uf005%B%210F'
-  zstyle ':myzshrc:gitstatus' commits-ahead '%36Fﰵ%B%86F'
-  zstyle ':myzshrc:gitstatus' commits-behind '%36Fﰬ%B%86F'
-  zstyle ':myzshrc:gitstatus' push-commits-ahead '%36Fﰯ%B%86F'
-  zstyle ':myzshrc:gitstatus' push-commits-behind '%36Fﰲ%B%86F'
-  zstyle ':myzshrc:gitstatus' action '%B%210F'
-  zstyle ':myzshrc:gitstatus' num-conflicted '%167F%B%210F'
-  __ZSHRC__indicator_overwrite                      # Update the overwrite indicator if needed.
-}
-
-# Select the prompt.
-# The fancy prompt will be used if the terminal is a virtual TTY, X11 is available, we're using
-# a UTF-8 locale, we're not in a SSH session, and the terminal supports 8-bit colors; otherwise
-# the simple prompt will be used.
-if [[ $ZSHRC_PROMPT == simple ]] {
-  __ZSHRC__simple_prompt
-} elif [[ $ZSHRC_PROMPT == fancy ]] {
-  __ZSHRC__fancy_prompt
-} else {
-  [[ $TTY = /dev/pts/* ]] \
-    && [[ $LANG = *UTF-8* ]] \
-    && ! ((__ZSHRC__ssh_session)) \
-    && ((__ZSHRC__color8bit)) \
-    && __ZSHRC__fancy_prompt || __ZSHRC__simple_prompt
 }
 # ----------------------------------------------------------------------------------------------- #
 
@@ -755,7 +776,7 @@ zstyle ':completion:*:processes-names' list-colors '=*=01;32'
   zstyle ':completion:*:ssh:*' users
   zstyle ':completion:*:sshfs:*' users
   # Workaround for sshfs
-  [[ -n ${commands[sshfs]} ]] && function() _user_at_host() { _ssh_hosts "$@" }
+  [[ -n ${commands[sshfs]} ]] && _user_at_host() { _ssh_hosts "$@" }
   # Don't complete hosts from /etc/hosts
   zstyle -e ':completion:*' hosts 'reply=()'
 }
