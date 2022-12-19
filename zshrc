@@ -655,7 +655,6 @@ if [[ -n ${commands[git]} && -r /usr/share/gitstatus/gitstatus.plugin.zsh ]] {
   __ZSHRC__gitstatus_prompt_update() {
     gitstatus_prompt=''                             # Reset git status prompt.
 
-    : ${__ZSHRC__gitstatus_started:=0}
     if (! __ZSHRC__is_git_repo) {
       gitstatus_stop 'MY'                           # Stop gitstatusd instance with name "MY".
       return
