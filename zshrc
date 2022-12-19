@@ -836,6 +836,24 @@ nmed() {
   }
 }
 
+# isodate - print the current date in ISO format ------------------------------------------------ #
+isodate() {
+  if [[ "$1" = "--utc" ]] {
+    print -r -- $(date -u +%Y-%m-%d)
+  } else {
+    print -r -- $(date +%Y-%m-%d)
+  }
+}
+
+# isotime - print the current time in ISO format ------------------------------------------------ #
+isotime() {
+  if [[ "$1" = "--utc" ]] {
+    print -r -- $(date -u +%H:%M:%S)
+  } else {
+    print -r -- $(date +%H:%M:%S)
+  }
+}
+
 # sshfs-sudo - mount sshfs remote with root privileges using sudo ------------------------------- #
 if [[ -n ${commands[sshfs]} ]] {
   sshfs-sudo() {
