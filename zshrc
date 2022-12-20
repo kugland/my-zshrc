@@ -20,7 +20,6 @@
 
 # [ LOAD FUNCTIONS AND MODULES ]----------------------------------------------------------------- #
 zmodload zsh/parameter
-zmodload zsh/datetime
 zmodload -F zsh/stat b:zstat
 # ----------------------------------------------------------------------------------------------- #
 
@@ -144,26 +143,26 @@ readonly HISTSIZE SAVEHIST HISTFILE                 # Make the variables readonl
 # We'll assume that the terminal supports at least 4-bit colors, so we should detect support for
 # 8 and 24-bit color. I believe it's also reasonable to assume that a terminal that supports 24-bit
 # color will also support 256-color.
-[[ $COLORTERM = (24bit|truecolor) ]]; myzshrc_color24bit=$(( ! $? ))
-((myzshrc_color24bit)) || [[ $TERM = *256color* ]]; myzshrc_color8bit=$(( ! $? ))
-readonly myzshrc_color24bit myzshrc_color8bit
+[[ $COLORTERM = (24bit|truecolor) ]]; _myzshrc_color24bit=$(( ! $? ))
+((_myzshrc_color24bit)) || [[ $TERM = *256color* ]]; _myzshrc_color8bit=$(( ! $? ))
+readonly _myzshrc_color8bit
 
 # If 24-bit color is not supported, and Zsh version is at least 5.7.0, we can use the module
 # 'zsh/nearcolor' to approximate 24-bit colors as 8-bit colors. On 4-bit terminals, your mileage
 # may vary; on $TERM = linux, for example, the resulting 256-color escapes will result in bright
 # white text.
-! ((myzshrc_color24bit)) && is-at-least 5.7.0 $ZSH_VERSION && zmodload zsh/nearcolor
+! ((_myzshrc_color24bit)) && is-at-least 5.7.0 $ZSH_VERSION && zmodload zsh/nearcolor
 # ----------------------------------------------------------------------------------------------- #
 
 
 # [ DETECT SSH SESSIONS ]------------------------------------------------------------------------ #
 # First try the easy way: if SSH_CONNECTION is set, we're running under SSH.
-myzshrc_ssh_session=${${SSH_CONNECTION:+1}:-0}
+_myzshrc_ssh_session=${${SSH_CONNECTION:+1}:-0}
 
 # If SSH_CONNECTION is not set, then we might be running under sudo, so we check whether we have
 # sshd as an ancestor process. This will fail for non-root users if /proc was mounted with
 # hidepid=2.
-if ! ((myzshrc_ssh_session)) {
+if ! ((_myzshrc_ssh_session)) {
   () {
     local IFS=' '                                   # This is needed to split /proc/<pid>/stat.
     local pid=$$                                    # The current process ID.
@@ -176,42 +175,41 @@ if ! ((myzshrc_ssh_session)) {
       [[ $exe = sshd ]] && return 0                 # sshd process is our ancestor, return true.
     }
     return 1
-  } && myzshrc_ssh_session=1
+  } && _myzshrc_ssh_session=1
 }
-readonly myzshrc_ssh_session
+readonly _myzshrc_ssh_session
 # ----------------------------------------------------------------------------------------------- #
 
 
 # [ DETECT PUTTY ]------------------------------------------------------------------------------- #
 # Detect if we're running under PuTTY.
-[[ $TERM = putty* || ${PUTTY:-0} -eq 1 ]]; myzshrc_putty=$(( ! $? ))
-readonly myzshrc_putty
+[[ $TERM = putty* || ${PUTTY:-0} -eq 1 ]]; _myzshrc_putty=$(( ! $? ))
 # ----------------------------------------------------------------------------------------------- #
 
 
 # [ DETECT FSTYPE OF $PWD ]---------------------------------------------------------------------- #
 # Cache directory filesystem types.
-typeset -gA myzshrc_fstypecache
-myzshrc_fstypecache_hash=""
+typeset -gA _myzshrc_fstypecache
+_myzshrc_fstypecache_hash=""
 
 # Get current directory filesystem type.
 # Value is returned in variable REPLY.
-myzshrc_fstypecache_get() {
+_myzshrc_fstypecache_get() {
   local current_hash=${$(sha256sum /etc/mtab)[1]}   # Hash the contents of /etc/mtab
-  if [[ $current_hash != $myzshrc_fstypecache_hash ]] { # If the hash has changed,
-    myzshrc_fstypecache_hash=$current_hash          # Reset the cache.
-    myzshrc_fstypecache=( )
+  if [[ $current_hash != $_myzshrc_fstypecache_hash ]] { # If the hash has changed,
+    _myzshrc_fstypecache_hash=$current_hash         # Reset the cache.
+    _myzshrc_fstypecache=( )
   }
-  if ! (( ${+myzshrc_fstypecache[$PWD]} )) {       # If value if not found for $PWD, compute it.
-    myzshrc_fstypecache[$PWD]=$(findmnt -fn -d backward -o FSTYPE --target $PWD)
+  if ! (( ${+_myzshrc_fstypecache[$PWD]} )) {       # If value if not found for $PWD, compute it.
+    _myzshrc_fstypecache[$PWD]=$(findmnt -fn -d backward -o FSTYPE --target $PWD)
   }
-  REPLY=${myzshrc_fstypecache[$PWD]}
+  REPLY=${_myzshrc_fstypecache[$PWD]}
 }
 # ----------------------------------------------------------------------------------------------- #
 
 
 # [ SEQUENCE TO RESET TERMINAL ]----------------------------------------------------------------- #
-myzshrc_reset_terminal() {
+_myzshrc_reset_terminal() {
   stty sane -imaxbel -brkint ixoff iutf8            # Reset terminal settings.
   print -nr $'\e<'                                  # Exit VT52 mode.
   print -nr $'\e7\e[?1049l\e8'                      # Use main screen buffer.
@@ -256,8 +254,8 @@ eval $(dircolors -b <(sed -ne '/.*DIR_COLORS_APPENDIX$/,//{s///g;p};' ~/.zshrc))
 
 # [ SETUP KEYMAP ]------------------------------------------------------------------------------- #
 # Only keys used in this script should be listed here.
-typeset -A myzshrc_keys
-myzshrc_keys=(
+typeset -A _myzshrc_keys
+_myzshrc_keys=(
   Tab             "${terminfo[ht]}"
   Backspace       "${terminfo[kbs]} ^?"
   Insert          "${terminfo[kich1]}"
@@ -280,33 +278,33 @@ myzshrc_keys=(
 
 # Workarounds for problematic terminals: rxvt and PuTTY.
 if [[ $TERM = rxvt* ]] {
-  myzshrc_keys[CtrlPageUp]=$'\e[5^'
-  myzshrc_keys[CtrlPageDown]=$'\e[6^'
-  myzshrc_keys[CtrlDelete]=$'\e[3^'
-  myzshrc_keys[CtrlRightArrow]=$'\eOc'
-  myzshrc_keys[CtrlLeftArrow]=$'\eOd'
-} elif ((myzshrc_putty)) {
-  myzshrc_keys[Home]=$'\e[1~'
-  myzshrc_keys[End]=$'\e[4~'
-  myzshrc_keys[CtrlPageUp]=$'\e\e[5~'              # This is actually Alt+PageUp.
-  myzshrc_keys[CtrlPageDown]=$'\e\e[6~'            # This is actually Alt+PageDown.
-  myzshrc_keys[CtrlDelete]=''                      # Sorry, no Ctrl+Delete.
-  myzshrc_keys[RightArrow]=$'\eOC'
-  myzshrc_keys[LeftArrow]=$'\eOD'
-  myzshrc_keys[CtrlRightArrow]=$'\e[C'
-  myzshrc_keys[CtrlLeftArrow]=$'\e[D'
+  _myzshrc_keys[CtrlPageUp]=$'\e[5^'
+  _myzshrc_keys[CtrlPageDown]=$'\e[6^'
+  _myzshrc_keys[CtrlDelete]=$'\e[3^'
+  _myzshrc_keys[CtrlRightArrow]=$'\eOc'
+  _myzshrc_keys[CtrlLeftArrow]=$'\eOd'
+} elif ((_myzshrc_putty)) {
+  _myzshrc_keys[Home]=$'\e[1~'
+  _myzshrc_keys[End]=$'\e[4~'
+  _myzshrc_keys[CtrlPageUp]=$'\e\e[5~'              # This is actually Alt+PageUp.
+  _myzshrc_keys[CtrlPageDown]=$'\e\e[6~'            # This is actually Alt+PageDown.
+  _myzshrc_keys[CtrlDelete]=''                      # Sorry, no Ctrl+Delete.
+  _myzshrc_keys[RightArrow]=$'\eOC'
+  _myzshrc_keys[LeftArrow]=$'\eOD'
+  _myzshrc_keys[CtrlRightArrow]=$'\e[C'
+  _myzshrc_keys[CtrlLeftArrow]=$'\e[D'
 }
 
 # Bind multiple keys at once.
-# $1: Either a key to the myzshrc_keys array, or multiple keys sequences separated by spaces.
-myzshrc_bindkeys() {
+# $1: Either a key to the _myzshrc_keys array, or multiple keys sequences separated by spaces.
+_myzshrc_bindkeys() {
   local keys=$1
   local widget=$2
   local key
   local IFS=' '                                     # Split keys by spaces.
   for key (${=keys}) {                              # Loop through the key sequences.
-    if (( ${+myzshrc_keys[$key]} )) {               # If its a key from the myzshrc_keys array,
-      myzshrc_bindkeys "${myzshrc_keys[$key]}" $widget # Recurse.
+    if (( ${+_myzshrc_keys[$key]} )) {              # If its a key from the _myzshrc_keys array,
+      _myzshrc_bindkeys "${_myzshrc_keys[$key]}" $widget # Recurse.
     } else {
       bindkey $key $widget                          # Bind the key to the widget.
     }
@@ -341,7 +339,7 @@ bindkey -r '^'{'[','?',{,'[[','[O'}{A,B,C,D},E,F,G,H,I,J,K,L,N,O,P,Q,R,S,T,U,V,W
     history-incremental-search-backward "^R"
   ) {
     for keycode (${=keycodes}) {
-      myzshrc_bindkeys $keycode $widget
+      _myzshrc_bindkeys $keycode $widget
     }
   }
 }
@@ -349,43 +347,43 @@ bindkey -r '^'{'[','?',{,'[[','[O'}{A,B,C,D},E,F,G,H,I,J,K,L,N,O,P,Q,R,S,T,U,V,W
 # Send break (Ctrl+D) --------------------------------------------------------------------------- #
 # This widget allows Ctrl+D to work even when the buffer is not empty. Pressing Ctrl+D twice on
 # a non-empty buffer will close Zsh.
-myzshrc_send_break() {
+_myzshrc_send_break() {
   BUFFER+='^D'                                      # Add the ^D to the buffer.
   zle send-break                                    # Send a break, similar to clicking Ctrl+C.
 }
-zle -N myzshrc_send_break
-bindkey '^D' myzshrc_send_break
+zle -N _myzshrc_send_break
+bindkey '^D' _myzshrc_send_break
 
 # Clear screen (Ctrl+L) ------------------------------------------------------------------------- #
 # Zsh's clear-screen doesn't clear the scrollback buffer, this does.
-myzshrc_clear_screen() {
+_myzshrc_clear_screen() {
   print -n $'\e[3J'                                 # Clear the scrollback buffer.
   zle clear-screen                                  # Call zle's clear-screen widget.
 }
-zle -N myzshrc_clear_screen
-bindkey '^L' myzshrc_clear_screen
+zle -N _myzshrc_clear_screen
+bindkey '^L' _myzshrc_clear_screen
 
 # Move to next/previous word (Ctrl+RightArrow / Ctrl + LeftArrow) ------------------------------- #
 if [[ $TERM != linux ]] {
-  myzshrc_backward_word() { local WORDCHARS=${WORDCHARS:s#/#}; zle backward-word }
-  myzshrc_forward_word() { local WORDCHARS=${WORDCHARS:s#/#}; zle forward-word }
+  _myzshrc_backward_word() { local WORDCHARS=${WORDCHARS:s#/#}; zle backward-word }
+  _myzshrc_forward_word() { local WORDCHARS=${WORDCHARS:s#/#}; zle forward-word }
 
   # Delete next/previous word (Ctrl+Backspace / Ctrl+Delete)
   # Since xterm emits ^H for backspace, backspace won't work. For a workaround,
   # see https://wiki.archlinux.org/title/Xterm#Fix_the_backspace_key
-  myzshrc_backward_delete_word() { local WORDCHARS=${WORDCHARS:s#/#}; zle backward-delete-word }
-  myzshrc_forward_delete_word() { local WORDCHARS=${WORDCHARS:s#/#}; zle delete-word }
+  _myzshrc_backward_delete_word() { local WORDCHARS=${WORDCHARS:s#/#}; zle backward-delete-word }
+  _myzshrc_forward_delete_word() { local WORDCHARS=${WORDCHARS:s#/#}; zle delete-word }
 
   # Bind the keys.
   () {
     local widget keycode
     for widget keycode (
-      myzshrc_backward_word          CtrlLeftArrow
-      myzshrc_forward_word           CtrlRightArrow
-      myzshrc_backward_delete_word   CtrlBackspace
-      myzshrc_forward_delete_word    CtrlDelete
+      _myzshrc_backward_word          CtrlLeftArrow
+      _myzshrc_forward_word           CtrlRightArrow
+      _myzshrc_backward_delete_word   CtrlBackspace
+      _myzshrc_forward_delete_word    CtrlDelete
     ) {
-      zle -N $widget && myzshrc_bindkeys $keycode $widget
+      zle -N $widget && _myzshrc_bindkeys $keycode $widget
     }
   }
 }
@@ -395,7 +393,7 @@ if [[ $TERM != linux ]] {
 
 zle-line-init() {
   ((${+terminfo[smkx]})) && echoti smkx             # Enable application mode
-  myzshrc_zlelineinit_overwrite                     # Set mode and cursor for overwrite/insert
+  _myzshrc_zlelineinit_overwrite                    # Set mode and cursor for overwrite/insert
 }
 
 zle-line-finish() {
@@ -406,12 +404,12 @@ zle -N zle-line-init
 zle -N zle-line-finish
 
 # Insert and overwrite mode --------------------------------------------------------------------- #
-myzshrc_overwrite_state=0                           # Overwrite mode state, 0 = off, 1 = on
-myzshrc_overwrite_prompt=''                         # Overwrite mode indicator for RPROMPT
+_myzshrc_overwrite_state=0                          # Overwrite mode state, 0 = off, 1 = on
+_myzshrc_overwrite_prompt=''                        # Overwrite mode indicator for RPROMPT
 
 # Sets cursor shape according to insert/overwrite state and update the indicator.
-myzshrc_cursorshape_overwrite() {
-  if ((myzshrc_overwrite_state)) {                  # In overwrite mode:
+_myzshrc_cursorshape_overwrite() {
+  if ((_myzshrc_overwrite_state)) {                 # In overwrite mode:
     print -n $'\e[?6c'                              # █ cursor on $TERM = linux
     print -n $'\e[3 q'                              # _ cursor on xterm and compatible
   } else {                                          # In insert mode:
@@ -421,52 +419,54 @@ myzshrc_cursorshape_overwrite() {
 }
 
 # Update the overwrite mode indicator.
-myzshrc_indicator_overwrite() {
+_myzshrc_indicator_overwrite() {
   local overwrite_indicator
   zstyle -s ':myzshrc:prompt' overwrite-indicator overwrite_indicator
-  ((myzshrc_overwrite_state)) \
-    && myzshrc_overwrite_prompt='  '$overwrite_indicator \
-    || myzshrc_overwrite_prompt=''
+  ((_myzshrc_overwrite_state)) \
+    && _myzshrc_overwrite_prompt='  '$overwrite_indicator \
+    || _myzshrc_overwrite_prompt=''
 }
 
 # Handler for the 'Insert' key.
-myzshrc_keyhandler_overwrite() {
+_myzshrc_keyhandler_overwrite() {
   zle overwrite-mode                                # Toggle overwrite mode.
   [[ $ZLE_STATE = *insert* ]]
-  myzshrc_overwrite_state=$?                        # Save the overwrite mode state.
-  myzshrc_cursorshape_overwrite                     # Update the cursor shape.
-  myzshrc_indicator_overwrite                       # Update the indicator.
+  _myzshrc_overwrite_state=$?                       # Save the overwrite mode state.
+  _myzshrc_cursorshape_overwrite                    # Update the cursor shape.
+  _myzshrc_indicator_overwrite                      # Update the indicator.
   # If we're not in the start context, we can't reset the prompt, as it -- for some reasom --
   # will mess up the RPROMPT.
   [[ $CONTEXT = start ]] && zle reset-prompt        # Reset the prompt.
 }
-zle -N myzshrc_keyhandler_overwrite
-myzshrc_bindkeys Insert myzshrc_keyhandler_overwrite
+zle -N _myzshrc_keyhandler_overwrite
+_myzshrc_bindkeys Insert _myzshrc_keyhandler_overwrite
 
-myzshrc_zlelineinit_overwrite() {
+_myzshrc_zlelineinit_overwrite() {
   # Since zle's overwrite mode is not persistent, we need to restore the state on each prompt.
-  ((myzshrc_overwrite_state)) && zle overwrite-mode
-  myzshrc_cursorshape_overwrite
+  ((_myzshrc_overwrite_state)) && zle overwrite-mode
+  _myzshrc_cursorshape_overwrite
 }
 
 zle -N zle-line-init
 
-myzshrc_preexec_overwrite() {
+_myzshrc_overwrite_preexec() {
   # Always reset to insert cursor before running commands.
   print -n $'\e[?2c'                                # _ cursor on $TERM = linux
   print -n $'\e[5 q'                                # │ cursor on xterm and compatible
 }
 
-add-zsh-hook preexec myzshrc_preexec_overwrite
+add-zsh-hook preexec _myzshrc_overwrite_preexec
 
 
 # [ PROMPT SETUP ]------------------------------------------------------------------------------- #
 # That's the way I like it.
 
-# Simple prompt and fancy prompt ---------------------------------------------------------------- #
+# Minimal, simple, and fancy prompts ------------------------------------------------------------ #
 # A simple prompt that will work nicely in a console with limited charset and only 16 colors,
 # such as the Linux console.
-myzshrc_simple_prompt() {
+_myzshrc_prompt_simple() {
+  _myzshrc_prompt='simple'
+  _myzshrc_prompt_prev='simple'
   zstyle ':myzshrc:prompt' prompt-type 'simple'
   zstyle ':myzshrc:prompt' before-userhost '%B%F{%(!.1.2)}'
   zstyle ':myzshrc:prompt' before-path '%f%b:%B%4F'
@@ -488,12 +488,14 @@ myzshrc_simple_prompt() {
   zstyle ':myzshrc:gitstatus' push-commits-behind '%6F%B→'
   zstyle ':myzshrc:gitstatus' action '%B%1F'
   zstyle ':myzshrc:gitstatus' num-conflicted '%1F!%B'
-  myzshrc_indicator_overwrite                       # Update the overwrite indicator if needed.
+  _myzshrc_indicator_overwrite                      # Update the overwrite indicator if needed.
 }
 
 # Completely unnecessary, but I like it.
 # This prompt requires Nerd Fonts (https://www.nerdfonts.com/).
-myzshrc_fancy_prompt() {
+_myzshrc_prompt_fancy() {
+  _myzshrc_prompt='fancy'
+  _myzshrc_prompt_prev='fancy'
   zstyle ':myzshrc:prompt' prompt-type 'fancy'
   local userhost_color='%(!.#b24742.#47a730)'
   zstyle ':myzshrc:prompt' before-userhost "%K{$userhost_color}%B%7F "
@@ -517,34 +519,55 @@ $'}\uE0B4%k%F{'$userhost_color$'}\uE0B4%f '
   zstyle ':myzshrc:gitstatus' push-commits-behind '%36Fﰲ%B%86F'
   zstyle ':myzshrc:gitstatus' action '%B%210F'
   zstyle ':myzshrc:gitstatus' num-conflicted '%167F%B%210F'
-  myzshrc_indicator_overwrite                       # Update the overwrite indicator if needed.
+  _myzshrc_indicator_overwrite                      # Update the overwrite indicator if needed.
+}
+
+# Minimal prompt. Mainly for screenshots.
+_myzshrc_prompt_minimal() {
+  _myzshrc_prompt='minimal'
+  _myzshrc_prompt_prev='minimal'
+  zstyle -d ':myzshrc:prompt'
+  zstyle -d ':myzshrc:gitstatus'
+  zstyle ':myzshrc:prompt' prompt-type 'minimal'
+  _myzshrc_indicator_overwrite                      # Update the overwrite indicator if needed.
 }
 
 # Select the prompt.
 # The fancy prompt will be used if the terminal is a virtual TTY, X11 is available, we're using
 # a UTF-8 locale, we're not in a SSH session, and the terminal supports 8-bit colors; otherwise
 # the simple prompt will be used.
-if [[ ${ZSHRC_PROMPT:=''} == simple ]] {
-  myzshrc_simple_prompt
-} elif [[ $ZSHRC_PROMPT == fancy ]] {
-  myzshrc_fancy_prompt
-} else {
-  [[ $TTY = /dev/pts/* ]] \
-    && [[ $LANG = *UTF-8* ]] \
-    && ! ((myzshrc_ssh_session)) \
-    && ((myzshrc_color8bit)) \
-    && myzshrc_fancy_prompt || myzshrc_simple_prompt
+_myzshrc_prompt_select() {
+  : ${_myzshrc_prompt:=''}
+  : ${_myzshrc_prompt_prev:=''}
+  if [[ -n ${_myzshrc_prompt_prev} && $_myzshrc_prompt_prev = $_myzshrc_prompt ]] {
+    return
+  }
+  case ${_myzshrc_prompt} in
+    simple) _myzshrc_prompt_simple ;;
+    fancy) _myzshrc_prompt_fancy ;;
+    minimal) _myzshrc_prompt_minimal ;;
+    *) [[ $TTY = /dev/pts/* ]] \
+        && [[ $LANG = *UTF-8* ]] \
+        && ! ((_myzshrc_ssh_session)) \
+        && ((_myzshrc_color8bit)) \
+        && [[ -z $TMUX ]] \
+        && _myzshrc_prompt_fancy || _myzshrc_prompt_simple
+  esac
 }
 
 # Precmd hook that resets the terminal and updates the prompt ----------------------------------- #
-myzshrc_prompt_precmd() {
+_myzshrc_prompt_precmd() {
   ret=$?
-  myzshrc_reset_terminal
-  if [[ $ret -ne 0 ]] printf "\033]133;D;%s;aid=%s\007" $ret "$$"
+  _myzshrc_reset_terminal
+  _myzshrc_prompt_select
+  if (( $ret )) printf "\033]133;D;%s;aid=%s\007" $ret "$$"
   printf "\033]133;A;cl=m;aid=%s\033\007" "$$"
-  if (( ${BASIC_PROMPT:-0} )) {
-    PS1='%# '                                       # Basic prompt, e.g. for screenshots
+  if [[ $_myzshrc_prompt = 'minimal' ]] {
+    # Minimal prompt is a special case, since it doesn't include the user/host, and neither
+    # has any RPROMPT/RPS2.
+    PS1='%# '
     PS2='> '
+    RPS2=''
     RPROMPT=''
   } else {
     local prompt_type \
@@ -563,14 +586,14 @@ myzshrc_prompt_precmd() {
     zstyle -s ':myzshrc:prompt' continuation continuation
     zstyle -s ':myzshrc:prompt' eol-mark eol_mark
 
-    myzshrc_gitstatus_prompt_update
+    _myzshrc_gitstatus_prompt_update
 
-    ((myzshrc_ssh_session)) && PS1=$ssh_indicator || PS1=''
+    ((_myzshrc_ssh_session)) && PS1=$ssh_indicator || PS1=''
     PS1+="${before_userhost}%(!..%n@)%m${before_path}"
     PS1+='%~'
     PS1+="${after_path}"
 
-    RPROMPT="\${myzshrc_overwrite_prompt}"
+    RPROMPT="\${_myzshrc_overwrite_prompt}"
     RPROMPT+="%(1j.  $jobs_indicator.)"
     RPROMPT+="%(0?..  $error_indicator)"
     RPROMPT+=$gitstatus_prompt
@@ -592,18 +615,19 @@ myzshrc_prompt_precmd() {
   # https://gitlab.freedesktop.org/Per_Bothner/specifications/blob/master/proposals/semantic-prompts.md
   PS1=$'%{\e]133;P;k=i\e\\%}'$PS1$'%{\e]133;B\e\\%}'
   PS2=$'%{\e]133;P;k=s\e\\%}'$PS2$'%{\e]133;B\e\\%}'
-  RPROMPT=$'%{\e]133;P;k=r\e\\%}'$RPROMPT$'%{\e]133;B\e\\%}'
+  if [[ -n $RPS2 ]] RPS2=$'%{\e]133;P;k=r\e\\%}'$RPS2$'%{\e]133;B\e\\%}'
+  if [[ -n $RPROMPT ]] RPROMPT=$'%{\e]133;P;k=r\e\\%}'$RPROMPT$'%{\e]133;B\e\\%}'
 }
 
-myzshrc_prompt_preexec() {
+_myzshrc_prompt_preexec() {
   print -rn -- $'\e]133;C;\e\\'
 }
 
-add-zsh-hook precmd myzshrc_prompt_precmd
-add-zsh-hook preexec myzshrc_prompt_preexec
+add-zsh-hook precmd _myzshrc_prompt_precmd
+add-zsh-hook preexec _myzshrc_prompt_preexec
 
 # Window title ---------------------------------------------------------------------------------- #
-myzshrc_ellipsized_path_window_title() {
+_myzshrc_ellipsized_path_window_title() {
   local cwd=${(%):-%~}                              # Current working directory.
   if (( ${#cwd} > 40 )) {                           # If it's too long,
     local cwd_array=(${(s:/:)${cwd}})               # Split the path into an array.
@@ -623,17 +647,17 @@ myzshrc_ellipsized_path_window_title() {
   print -n $cwd                                     # Print the path.
 }
 
-myzshrc_print_window_title() {
-  local cwd=$(myzshrc_ellipsized_path_window_title) # Get the current directory (ellipsized).
+_myzshrc_print_window_title() {
+  local cwd=$(_myzshrc_ellipsized_path_window_title) # Get the current directory (ellipsized).
   local cmd=$1                                      # Get the command name.
   cwd=${cwd//[[:cntrl:]]/ }                         # Strip control characters from the path.
   cmd=${cmd//[[:cntrl:]]/ }                         # Strip control characters from the commmand.
   print -n $'\e]0;'                                 # Start the title escape sequence.
   if [[ -z $TMUX ]] {
-    ((myzshrc_ssh_session)) && print -n '🌎'        # Show we're running through SSH.
-    ((UID==0)) && print -n '🔓'                     # Add an unlocked lock emoji if user is root.
-    ((myzshrc_ssh_session)) && print -Pn ' [%m]'    # Show the SSH hostname.
-    ((UID==0||myzshrc_ssh_session)) && print -n ' ' # Add a space if we're root or SSH.
+    ((_myzshrc_ssh_session)) && print -n '🌎'       # Show we're running through SSH.
+    ((! UID)) && print -n '🔓'                      # Add an unlocked lock emoji if user is root.
+    ((_myzshrc_ssh_session)) && print -Pn ' [%m]'   # Show the SSH hostname.
+    ((! UID||_myzshrc_ssh_session)) && print -n ' ' # Add a space if we're root or SSH.
     print -nr -- $cwd                               # Print the path.
     print -n ' • '                                  # Add a separator.
   }
@@ -641,18 +665,18 @@ myzshrc_print_window_title() {
   print -n $'\e\\'                                  # End the title escape sequence.
 }
 
-myzshrc_precmd_window_title() {                     # After the command is run, we're back in zsh,
-  myzshrc_print_window_title zsh                    # so let the window name reflect that.
+_myzshrc_window_title_precmd() {                    # After the command is run, we're back in zsh,
+  _myzshrc_print_window_title zsh                   # so let the window name reflect that.
 }
 
-myzshrc_preexec_window_title() {
+_myzshrc_window_title_preexec() {
   local cmd=$2
   [[ ${#cmd} -gt 32 ]] && cmd="${cmd[1,31]}…"       # Truncate the command line if it's too long.
-  myzshrc_print_window_title ${cmd}                 # Show the command name in the window title.
+  _myzshrc_print_window_title ${cmd}                # Show the command name in the window title.
 }
 
-add-zsh-hook precmd myzshrc_precmd_window_title
-add-zsh-hook preexec myzshrc_preexec_window_title
+add-zsh-hook precmd _myzshrc_window_title_precmd
+add-zsh-hook preexec _myzshrc_window_title_preexec
 
 # Show git status in RPROMPT -------------------------------------------------------------------- #
 # On Arch Linux, install the gitstatus, gitstatus-bin or gitstatus-git packages from AUR.
@@ -660,11 +684,11 @@ add-zsh-hook preexec myzshrc_preexec_window_title
 if [[ -n ${commands[git]} && -r /usr/share/gitstatus/gitstatus.plugin.zsh ]] {
   source /usr/share/gitstatus/gitstatus.plugin.zsh
 
-  myzshrc_gitstatus_started=0                       # Whether gitstatus has been started.
-  myzshrc_gitstatus_last_active=$EPOCHSECONDS       # Last time gitstatus was active.
+  _myzshrc_gitstatus_started=0                      # Whether gitstatus has been started.
+  _myzshrc_gitstatus_last_active=$EPOCHSECONDS      # Last time gitstatus was active.
 
   # Sets GITSTATUS_PROMPT to reflect the state of the current git repository.
-  myzshrc_gitstatus_prompt_update() {
+  _myzshrc_gitstatus_prompt_update() {
     gitstatus_prompt=''                             # Reset git status prompt.
 
     # If we're not in a git repo, or if we are but it's on a remote filesystem, do not start
@@ -676,25 +700,25 @@ if [[ -n ${commands[git]} && -r /usr/share/gitstatus/gitstatus.plugin.zsh ]] {
         curdir=${curdir:h}                          # Go up one level.
       }
       if [[ ! -d "$curdir/.git" ]] return 0         # Succeed if we're not in a git repo.
-      myzshrc_fstypecache_get                       # Get the filesystem type of the current dir.
+      _myzshrc_fstypecache_get                      # Get the filesystem type of the current dir.
       if [[ $REPLY = (automount|fuse.sshfs|nfs) ]] return 0 # Succeed if it's a remote filesystem.
       return 1                                      # Otherwise, fail.
     } && {
-      if (( myzshrc_gitstatus_started && myzshrc_gitstatus_last_active < (EPOCHSECONDS - 120) )) {
+      if (( _myzshrc_gitstatus_started && _myzshrc_gitstatus_last_active < (EPOCHSECONDS - 120) )) {
         gitstatus_stop 'MY'                         # Stop gitstatusd instance with name "MY".
-        myzshrc_gitstatus_started=0
+        _myzshrc_gitstatus_started=0
       }
       return
     }
 
     # Start gitstatusd instance with name "MY". The same name is passed to gitstatus_query in
-    # myzshrc_gitstatus_prompt_update. The flags with -1 as values enable staged, unstaged,
+    # _myzshrc_gitstatus_prompt_update. The flags with -1 as values enable staged, unstaged,
     # conflicted and untracked counters.
-    if (( ! myzshrc_gitstatus_started )) {
+    if (( ! _myzshrc_gitstatus_started )) {
       gitstatus_start -s -1 -u -1 -c -1 -d -1 'MY'
-      myzshrc_gitstatus_started=1
+      _myzshrc_gitstatus_started=1
     }
-    myzshrc_gitstatus_last_active=$EPOCHSECONDS
+    _myzshrc_gitstatus_last_active=$EPOCHSECONDS
 
     # Call gitstatus_query synchronously. Note that gitstatus_query can also be
     # called asynchronously; see documentation in gitstatus.plugin.zsh.
@@ -750,7 +774,7 @@ if [[ -n ${commands[git]} && -r /usr/share/gitstatus/gitstatus.plugin.zsh ]] {
     gitstatus_prompt="${p}"
   }
 } else {
-  myzshrc_gitstatus_prompt_update() {
+  _myzshrc_gitstatus_prompt_update() {
     gitstatus_prompt=""
   }
 }
@@ -816,10 +840,10 @@ zstyle ':completion:*' single-ignored show
 
 # [ EXIT MESSAGE ]------------------------------------------------------------------------------- #
 # Print a message when exiting the shell.
-myzshrc_zshexit_exit_message() {
+_myzshrc_exit_message_zshexit() {
   print -P "%B%F{black}-----%f zsh%b (%B%F{yellow}$$%f%b) %Bfinished %F{black}-----%f%b"
 }
-add-zsh-hook zshexit myzshrc_zshexit_exit_message
+add-zsh-hook zshexit _myzshrc_exit_message_zshexit
 # ----------------------------------------------------------------------------------------------- #
 
 
@@ -932,7 +956,7 @@ tmux() {
 # Parameters:
 #   $1: name
 #   $2: url of the tarball
-myzshrc_dependency() {
+_myzshrc_dependency() {
   local name=$1
   local tarball_url=$2
   local version=${${$(print -n $tarball_url | sha256sum)[1]}[1,16]}
@@ -961,7 +985,7 @@ myzshrc_dependency() {
 # renovate: datasource=github-tags depName=zsh-users/zsh-syntax-highlighting
 ZSH_SYNTAX_HIGHLIGHTING_VERSION=0.7.1
 
-myzshrc_dependency \
+_myzshrc_dependency \
   zsh-syntax-highlighting \
   https://github.com/zsh-users/zsh-syntax-highlighting/tarball/${ZSH_SYNTAX_HIGHLIGHTING_VERSION} \
   && {
@@ -969,8 +993,8 @@ myzshrc_dependency \
 
     # Disable syntax highlighting when under network directories.
     if [[ -n $ZSH_HIGHLIGHT_VERSION ]] {
-      myzshrc_precmd_disable_syntax_highlight_on_netfs() {
-        myzshrc_fstypecache_get                     # Get the filesystem type of the cur dir.
+      _myzshrc_disable_syntax_highlight_on_netfs_precmd() {
+        _myzshrc_fstypecache_get                    # Get the filesystem type of the cur dir.
         if [[ $REPLY = (automount|fuse.sshfs|nfs) ]] { # Check if it's a network filesystem.
           ZSH_HIGHLIGHT_MAXLENGTH=0                 # Disable syntax highlight if it is.
         } else {
@@ -978,29 +1002,29 @@ myzshrc_dependency \
         }
       }
     }
-    add-zsh-hook precmd myzshrc_precmd_disable_syntax_highlight_on_netfs
+    add-zsh-hook precmd _myzshrc_disable_syntax_highlight_on_netfs_precmd
   }
 
 # zsh history substring search ------------------------------------------------------------------ #
 # renovate: datasource=git-refs depName=https://github.com/zsh-users/zsh-history-substring-search branch=master
 ZSH_HISTORY_SUBSTR_SEARCH_DIGEST=4abed97b6e67eb5590b39bcd59080aa23192f25d
 
-myzshrc_dependency \
+_myzshrc_dependency \
   zsh-history-substring-search \
   https://github.com/zsh-users/zsh-history-substring-search/tarball/${ZSH_HISTORY_SUBSTR_SEARCH_DIGEST} \
   && {
     source ~/.zshrc-deps/zsh-history-substring-search/zsh-history-substring-search.plugin.zsh
 
     # Bind Ctrl+PageUp and Ctrl+PageDown to history-substring-search-{up,down}.
-    myzshrc_bindkeys CtrlPageUp history-substring-search-up
-    myzshrc_bindkeys CtrlPageDown history-substring-search-down
+    _myzshrc_bindkeys CtrlPageUp history-substring-search-up
+    _myzshrc_bindkeys CtrlPageDown history-substring-search-down
   }
 
 # zsh completions ------------------------------------------------------------------------------- #
 # renovate: datasource=github-tags depName=zsh-users/zsh-completions
 ZSH_COMPLETIONS_VERSION=0.34.0
 
-myzshrc_dependency \
+_myzshrc_dependency \
   zsh-completions \
   https://github.com/zsh-users/zsh-completions/tarball/${ZSH_COMPLETIONS_VERSION} \
   && {
@@ -1010,11 +1034,9 @@ myzshrc_dependency \
 
 
 # [ UNSET UNNEEDED VARIABLES AND FUNCTIONS ]----------------------------------------------------- #
-unset ZSH_HISTORY_SUBSTR_SEARCH_DIGEST
-unset ZSH_SYNTAX_HIGHLIGHTING_VERSION
-unset ZSH_COMPLETIONS_VERSION
-unset -f myzshrc_bindkeys
-unset -f myzshrc_dependency
+unset ZSH_HISTORY_SUBSTR_SEARCH_DIGEST ZSH_SYNTAX_HIGHLIGHTING_VERSION ZSH_COMPLETIONS_VERSION
+unset _myzshrc_keys _myzshrc_color24bit _myzshrc_putty
+unset -f _myzshrc_bindkeys _myzshrc_dependency
 # ----------------------------------------------------------------------------------------------- #
 
 
