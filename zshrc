@@ -620,6 +620,7 @@ _myzshrc_prompt_precmd() {
 }
 
 _myzshrc_prompt_preexec() {
+  # This is also for semantic integration.
   print -rn -- $'\e]133;C;\e\\'
 }
 
@@ -932,19 +933,31 @@ if [[ -n ${commands[sshfs]} ]] {
 
 # tmux - show a nice menu to select session when tmux is run without any parameters ------------- #
 tmux() {
-    if [[ $# -ne 0 || -n ${TMUX} || -z ${commands[fzf]} ]] {
-        command tmux "$@"
+  if [[ $# -ne 0 || -n ${TMUX} || -z ${commands[fzf]} ]] {
+    command tmux "$@"
+  } else {
+    setopt local_options pipefail
+    RESPONSE=$(
+      (
+        tmux list-sessions \
+          -F $'\e[33m#{session_id}\e[0m\t#{=/13/…:#{p13:session_name}}\t'\
+$'#{session_windows}\t#{t/f/%Y-%m-%d %H#:%M#:%S/:session_created}' \
+          2>/dev/null \
+          | sort -t$'\t' -k1.2n,4
+        echo $'\e[1;30m<Create new session>\e[0m'
+      ) | fzf -1 --ansi --margin=30%,$(( ( (COLUMNS / 2 - 29) < 0 ) ? 0 : (COLUMNS / 2 - 29) )) \
+            --prompt='⟩ ' --pointer='►' --border=rounded --header $'id\tname\t\t#win\tcreated' \
+            --layout=reverse --info=hidden \
+        | sed -E 's,\t.*,,g'
+    )
+    if (( $? )) {
+      return
+    } elif [[ "$RESPONSE" = "<Create new session>" ]] {
+      tmux new-session
     } else {
-        setopt local_options pipefail
-        RESPONSE=$( (tmux list-sessions -F $'\033[33m#{session_id}\033[0m\t#{=/13/…:#{p13:session_name}}\t#{session_windows}\t#{t/f/%Y-%m-%d %H#:%M#:%S/:session_created}' 2>/dev/null | sort -t$'\t' -k1.2n,4; echo $'\033[1;30m<Create new session>\033[0m') | fzf -1 --ansi --margin=30%,$(( ( (COLUMNS / 2 - 29) < 0 ) ? 0 : (COLUMNS / 2 - 29) )) --prompt='⟩ ' --pointer='➤' --border=rounded --header $'id\tname\t\t#win\tcreated' --layout=reverse --info=hidden | sed -E 's,\t.*,,g' )
-        if [[ $? -ne 0 ]] {
-            return
-        } elif [[ "$RESPONSE" = "<Create new session>" ]] {
-            tmux new-session
-        } else {
-            tmux attach -t "$RESPONSE"
-        }
+      tmux attach -t "$RESPONSE"
     }
+  }
 }
 # ----------------------------------------------------------------------------------------------- #
 
@@ -967,10 +980,19 @@ _myzshrc_dependency() {
   if [[ ! -d ~/.zshrc-deps/$pkgid ]] {
     {
       print -Pnr $'%B%0F[%b%fzshrc%B%0F]%b%f %F{green}Installing dependency \e[0;4m$name\e[0m ... '
-      2>/dev/null curl -sSL -o ~/.zshrc-deps/${pkgid}.tar.gz $tarball_url || { error=1; return }
-      tar --transform "s,^[^/]*,$pkgid,g" -xzf ~/.zshrc-deps/${pkgid}.tar.gz -C ~/.zshrc-deps || { error=1; return }
+      2>/dev/null curl -sSL -o ~/.zshrc-deps/${pkgid}.tar.gz $tarball_url || {
+        error=1
+        return
+      }
+      tar --transform "s,^[^/]*,$pkgid,g" -xzf ~/.zshrc-deps/${pkgid}.tar.gz -C ~/.zshrc-deps || {
+        error=1
+        return
+      }
       rm ~/.zshrc-deps/${pkgid}.tar.gz
-      ln -s $pkgid ~/.zshrc-deps/$name || { error=1; return }
+      ln -s $pkgid ~/.zshrc-deps/$name || {
+        error=1
+        return
+      }
     } always {
       if (( error )) {
         print -P '%B%F{red}failed%b%f'
