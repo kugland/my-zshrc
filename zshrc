@@ -538,8 +538,10 @@ if [[ ${ZSHRC_PROMPT:=''} == simple ]] {
 
 # Precmd hook that resets the terminal and updates the prompt ----------------------------------- #
 myzshrc_prompt_precmd() {
+  ret=$?
   myzshrc_reset_terminal
-
+  if [[ $ret -ne 0 ]] printf "\033]133;D;%s;aid=%s\007" $ret "$$"
+  printf "\033]133;A;cl=m;aid=%s\033\007" "$$"
   if (( ${BASIC_PROMPT:-0} )) {
     PS1='%# '                                       # Basic prompt, e.g. for screenshots
     PS2='> '
@@ -585,10 +587,18 @@ myzshrc_prompt_precmd() {
     # Make RPS2 show [cont] when we're in a continuation line (the previous line ended with '\').
     RPS2='%B%F{black}[%f%b${${(%):-%^}//(#s)(#e)/cont}%B%F{black}]%f%b'
   }
+  PS1=$'%{\e]133;P;k=i\e\\%}'$PS1$'%{\e]133;B\e\\%}'
+  PS2=$'%{\e]133;P;k=s\e\\%}'$PS2$'%{\e]133;B\e\\%}'
+  RPROMPT=$'%{\e]133;P;k=r\e\\%}'$RPROMPT$'%{\e]133;B\e\\%}'
   PROMPT_EOL_MARK=${eol_mark}
 }
 
+myzshrc_prompt_preexec() {
+  print -rn -- $'\e]133;C;\e\\'
+}
+
 add-zsh-hook precmd myzshrc_prompt_precmd
+add-zsh-hook preexec myzshrc_prompt_preexec
 
 # Window title ---------------------------------------------------------------------------------- #
 myzshrc_ellipsized_path_window_title() {
