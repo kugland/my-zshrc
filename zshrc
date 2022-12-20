@@ -587,10 +587,12 @@ myzshrc_prompt_precmd() {
     # Make RPS2 show [cont] when we're in a continuation line (the previous line ended with '\').
     RPS2='%B%F{black}[%f%b${${(%):-%^}//(#s)(#e)/cont}%B%F{black}]%f%b'
   }
+  PROMPT_EOL_MARK=${eol_mark}
+  # Add semantic integration, as described in
+  # https://gitlab.freedesktop.org/Per_Bothner/specifications/blob/master/proposals/semantic-prompts.md
   PS1=$'%{\e]133;P;k=i\e\\%}'$PS1$'%{\e]133;B\e\\%}'
   PS2=$'%{\e]133;P;k=s\e\\%}'$PS2$'%{\e]133;B\e\\%}'
   RPROMPT=$'%{\e]133;P;k=r\e\\%}'$RPROMPT$'%{\e]133;B\e\\%}'
-  PROMPT_EOL_MARK=${eol_mark}
 }
 
 myzshrc_prompt_preexec() {
