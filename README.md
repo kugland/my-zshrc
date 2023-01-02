@@ -9,4 +9,4 @@ Either set `TERM` to `putty` or `putty-*`, or set `PUTTY` to `1`, and
 
 ## Overriding prompt type
 
-Set the env var `ZSHRC_PROMPT` to `simple` or `fancy`, and the prompt type will be overriden.
+Set the env var `_myzshrc_prompt` to `minimal`, `simple` or `fancy`, and the prompt type will be overriden.
