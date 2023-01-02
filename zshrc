@@ -940,13 +940,13 @@ tmux() {
     RESPONSE=$(
       (
         tmux list-sessions \
-          -F $'\e[33m#{session_id}\e[0m\t#{=/13/…:#{p13:session_name}}\t'\
+          -F $'\e[33m#{session_id}\e[0m\t#{=/21/…:#{p21:session_name}}\t'\
 $'#{session_windows}\t#{t/f/%Y-%m-%d %H#:%M#:%S/:session_created}' \
           2>/dev/null \
           | sort -t$'\t' -k1.2n,4
         echo $'\e[1;30m<Create new session>\e[0m'
-      ) | fzf -1 --ansi --margin=30%,$(( ( (COLUMNS / 2 - 29) < 0 ) ? 0 : (COLUMNS / 2 - 29) )) \
-            --prompt='⟩ ' --pointer='►' --border=rounded --header $'id\tname\t\t#win\tcreated' \
+      ) | fzf -1 --ansi --margin=30%,$(( ( (COLUMNS / 2 - 33) < 0 ) ? 0 : (COLUMNS / 2 - 33) )) \
+            --prompt='⟩ ' --pointer='►' --border=rounded --header $'id\tname\t\t\t#win\tcreated' \
             --layout=reverse --info=hidden \
         | sed -E 's,\t.*,,g'
     )
