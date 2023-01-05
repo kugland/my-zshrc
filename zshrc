@@ -588,10 +588,9 @@ _myzshrc_prompt_precmd() {
 
     _myzshrc_gitstatus_prompt_update
 
-    ((_myzshrc_ssh_session)) && PS1=$ssh_indicator || PS1=''
-    PS1+="${before_userhost}%(!..%n@)%m${before_path}"
-    PS1+='%~'
-    PS1+="${after_path}"
+    PS1=''
+    ((_myzshrc_ssh_session)) && PS1+=$ssh_indicator
+    PS1+="${before_userhost}%(!..%n@)%m${before_path}%~${after_path}"
 
     RPROMPT="\${_myzshrc_overwrite_prompt}"
     RPROMPT+="%(1j.  $jobs_indicator.)"
@@ -599,9 +598,8 @@ _myzshrc_prompt_precmd() {
     RPROMPT+=$gitstatus_prompt
 
     # Indicate Python venv in the RPROMPT.
-    if (( ${${VIRTUAL_ENV:+1}:-0} )) {
-      RPROMPT+=$' %F{#4b8bbe}(venv %F{#ffe873}'"$(basename "%F{blue}$VIRTUAL_ENV")"$'%F{#4b8bbe})%f'
-    }
+    if (( ${${VIRTUAL_ENV:+1}:-0} )) \
+      RPROMPT+=$' %F{#4b8bbe}(venv %F{#ffe873}'"$(basename "$VIRTUAL_ENV")"$'%F{#4b8bbe})%f'
 
     local level
     PS2=''; for level ({1..16}) { PS2+="%(${level}_.${continuation}.)" }; PS2+=' '
