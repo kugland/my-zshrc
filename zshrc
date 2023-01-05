@@ -933,26 +933,25 @@ if [[ -n ${commands[sshfs]} ]] {
 
 # tmux - show a nice menu to select session when tmux is run without any parameters ------------- #
 tmux() {
-  if [[ $# -ne 0 || -n ${TMUX} || -z ${commands[fzf]} ]] {
+  if [[ $# -ne 0 || -n $TMUX || -z ${commands[fzf]} ]] {
     command tmux "$@"
   } else {
     setopt local_options pipefail
+    PADDING_HORIZONTAL=$(( (COLUMNS / 2) - 33 ))
+    PADDING_HORIZONTAL=$(( PADDING_HORIZONTAL > 0 ? PADDING_HORIZONTAL : 0 ))
+    FZF_FORMAT=$'\e[33m#{session_id}\e[0m\t#{=/21/…:#{p21:session_name}}\t'
+    FZF_FORMAT+=$'#{session_windows}\t#{t/f/%Y-%m-%d %H#:%M#:%S/:session_created}'
+    CREATE_NEW_SESSION='<Create new session>'
     RESPONSE=$(
       (
-        tmux list-sessions \
-          -F $'\e[33m#{session_id}\e[0m\t#{=/21/…:#{p21:session_name}}\t'\
-$'#{session_windows}\t#{t/f/%Y-%m-%d %H#:%M#:%S/:session_created}' \
-          2>/dev/null \
-          | sort -t$'\t' -k1.2n,4
-        echo $'\e[1;30m<Create new session>\e[0m'
-      ) | fzf -1 --ansi --margin=30%,$(( ( (COLUMNS / 2 - 33) < 0 ) ? 0 : (COLUMNS / 2 - 33) )) \
-            --prompt='⟩ ' --pointer='►' --border=rounded --header $'id\tname\t\t\t#win\tcreated' \
-            --layout=reverse --info=hidden \
+        tmux list-sessions -F "$FZF_FORMAT" 2>/dev/null | sort -t$'\t' -k1.2n,4
+        print -Pr -- "%B%F{black}${CREATE_NEW_SESSION}%b%f"
+      ) | fzf -1 --ansi --margin=30%,$PADDING_HORIZONTAL --prompt='⟩ ' --pointer='►' \
+          --border=rounded --header $'id\tname\t\t\t#win\tcreated' --layout=reverse --info=hidden \
         | sed -E 's,\t.*,,g'
     )
-    if (( $? )) {
-      return
-    } elif [[ "$RESPONSE" = "<Create new session>" ]] {
+    if (( $? )) return 1
+    if [[ "$RESPONSE" = $CREATE_NEW_SESSION ]] {
       tmux new-session
     } else {
       tmux attach -t "$RESPONSE"
