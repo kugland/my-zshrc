@@ -961,6 +961,14 @@ tmux() {
 # ----------------------------------------------------------------------------------------------- #
 
 
+# [ AUTO LOGOUT ]-------------------------------------------------------------------------------- #
+if [[ $TTY =~ '/dev/ttyS?[0-9]+' ]] {
+  TMOUT=300                                         # 5 minutes
+}
+# ----------------------------------------------------------------------------------------------- #
+
+
+
 # [ LOAD PLUGINS ]------------------------------------------------------------------------------- #
 # Download and load plugins.
 
@@ -1051,6 +1059,16 @@ _myzshrc_dependency \
   && {
     source ~/.zshrc-deps/zsh-completions/zsh-completions.plugin.zsh
   }
+# ----------------------------------------------------------------------------------------------- #
+
+# zsh defer ------------------------------------------------------------------------------------- #
+# renovate: datasource=git-refs depName=https://github.com/romkatv/zsh-defer branch=master
+ZSH_DEFER_DIGEST=ffa20c5ab9a44a72a83edacbaac3c4a3198b1cce
+
+_myzshrc_dependency \
+  zsh-defer \
+  https://github.com/romkatv/zsh-defer/tarball/${ZSH_DEFER_DIGEST} \
+  && source ~/.zshrc-deps/zsh-defer/zsh-defer.plugin.zsh
 # ----------------------------------------------------------------------------------------------- #
 
 
