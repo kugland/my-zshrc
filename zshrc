@@ -1036,7 +1036,7 @@ _myzshrc_dependency \
 
 # zsh history substring search ------------------------------------------------------------------ #
 # renovate: datasource=git-refs depName=https://github.com/zsh-users/zsh-history-substring-search branch=master
-ZSH_HISTORY_SUBSTR_SEARCH_DIGEST=4abed97b6e67eb5590b39bcd59080aa23192f25d
+ZSH_HISTORY_SUBSTR_SEARCH_DIGEST=400e58a87f72ecec14f783fbd29bc6be4ff1641c
 
 _myzshrc_dependency \
   zsh-history-substring-search \
