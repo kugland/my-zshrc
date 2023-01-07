@@ -942,9 +942,9 @@ tmux() {
     CREATE_NEW_SESSION='<Create new session>'
     RESPONSE=$(
       (
-        tmux list-sessions -F "$FZF_FORMAT" 2>/dev/null | sort -t$'\t' -k1.2n,4
+        tmux list-sessions -F "$FZF_FORMAT" 2>/dev/null | sort -k1.7n,2
         print -Pr -- "%B%F{black}${CREATE_NEW_SESSION}%b%f"
-      ) | fzf -1 --ansi --margin=30%,$PADDING_HORIZONTAL --prompt='⟩ ' --pointer='►' \
+      ) | fzf -1 --ansi --margin=30%,$PADDING_HORIZONTAL --prompt='⟩ ' --pointer='►' --cycle \
           --border=rounded --header $'id\tname\t\t\t#win\tcreated' --layout=reverse --info=hidden \
         | sed -E 's,\t.*,,g'
     )
