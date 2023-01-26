@@ -51,6 +51,7 @@ export GPG_TTY=$TTY                                 # Set the TTY for GPG pinent
   append_path path /snap/bin
 
   append_path ld_library_path /{usr/{local/,},}lib{,64,32}
+  append_path ld_library_path /usr/lib/jvm/default/lib/server/
 }
 
 # Dynamic linker -------------------------------------------------------------------------------- #
