@@ -627,28 +627,20 @@ add-zsh-hook precmd _myzshrc_prompt_precmd
 add-zsh-hook preexec _myzshrc_prompt_preexec
 
 # Window title ---------------------------------------------------------------------------------- #
-_myzshrc_ellipsized_path_window_title() {
-  local cwd=${(%):-%~}                              # Current working directory.
-  if (( ${#cwd} > 40 )) {                           # If it's too long,
-    local cwd_array=(${(s:/:)${cwd}})               # Split the path into an array.
-    local i
-    for i ({1..${#cwd_array}}) {                    # Loop through each path element.
-      local elm=${cwd_array[$i]}
-      if (( ${#elm} > 18 )) {                       # Make sure each element is at most 18 chars.
-        cwd_array[$i]=${elm[1,18]}…                 # If not, truncate and add an ellipsis.
-      }
-    }
-    cwd=${(j:/:)cwd_array}                          # Join the array back into a path.
-    if (( ${#cwd_array} >= 3 )) {                   # If there's at least 3 elements,
-      cwd=${${cwd[1,20]}%/*}/…/${${cwd[-20,-1]}#*/} # Join the head and the tail with an ellipsis.
-    }
-    if [[ ${cwd[1]} != '~' ]] { cwd=/${cwd} }       # Prefix with '/' if it doesn't start with '~'.
+_myzshrc_ellipsized_path() {
+  local cwd="$1"                                    # Current working directory.
+  if (( ${#cwd} > 40 )) {                           # If the path is too long,
+    cwd=${cwd:t}                                    # Show only the last component.
   }
-  print -n $cwd                                     # Print the path.
+  if (( ${#cwd} > 40 )) {                           # If the path is still too long,
+    cwd=${cwd:0:39}                                 # Show the first 39 characters.
+    cwd+='…'                                        # And an ellipsis.
+  }
+  print -n -- $cwd                                  # Print the path.
 }
 
 _myzshrc_print_window_title() {
-  local cwd=$(_myzshrc_ellipsized_path_window_title) # Get the current directory (ellipsized).
+  local cwd=$(_myzshrc_ellipsized_path ${(%):-%~})  # Get the current directory (ellipsized).
   local cmd=$1                                      # Get the command name.
   cwd=${cwd//[[:cntrl:]]/ }                         # Strip control characters from the path.
   cmd=${cmd//[[:cntrl:]]/ }                         # Strip control characters from the commmand.
