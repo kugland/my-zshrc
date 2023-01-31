@@ -627,16 +627,51 @@ add-zsh-hook precmd _myzshrc_prompt_precmd
 add-zsh-hook preexec _myzshrc_prompt_preexec
 
 # Window title ---------------------------------------------------------------------------------- #
+# Ellipsize a path to display it in a limited space.
 _myzshrc_ellipsized_path() {
-  local cwd="$1"                                    # Current working directory.
-  if (( ${#cwd} > 40 )) {                           # If the path is too long,
-    cwd=${cwd:t}                                    # Show only the last component.
+  (( ${#1} <= 40 )) && { print -r -- $1; return }   # If the path is short enough, just return it.
+  local path_array=(${(s:/:)1})                     # Split the path into an array.
+  local head=() tail=()                             # The head and tail of the path.
+  local prefix=''                                   # '/' if the path is absolute, '' otherwise.
+  [[ $1 == '/'* ]] && prefix='/'                    # If the path is absolute, set the prefix.
+  local next=tail                                   # The next part of the path to be added.
+  local result                                      # The result.
+  local element                                     # The current element being processed.
+  for (( i=1; $i <= ${#path_array}; i++ )) {
+    # If the current element is bigger than 22 characters, ellipsize it.
+    if [[ ${#path_array[$i]} -gt 23 ]] {
+      path_array[$i]=${path_array[$i]:0:20}…
+    }
   }
-  if (( ${#cwd} > 40 )) {                           # If the path is still too long,
-    cwd=${cwd:0:39}                                 # Show the first 39 characters.
-    cwd+='…'                                        # And an ellipsis.
+  while [[ ${#:-${prefix}${(j:/:)head}/…/${(j:/:)tail}} -lt 40 && ${#path_array} -gt 0 ]] {
+    # While the path is too long and there are still elements to process:
+    case $next {       # Select the next part of the path to be added and remove it from the array.
+      head) element=$path_array[1]; shift path_array ;;
+      tail) element=$path_array[-1]; shift -p path_array ;;
+    }
+    if [[ ${#:-${prefix}${(j:/:)head}/${element}/${(j:/:)tail}} -gt 40 && ${#element} -gt 3 ]] {
+      element='…'                                   # If it would be too long, replace it with '…'.
+    }
+    case $next {                                    # Add the element to the path.
+      head) head+=($element); next=tail ;;
+      tail) tail=($element $tail); next=head ;;
+    }
+    [[ ${element} == '…' ]] && break                # If we had to ellipsize the path, stop.
   }
-  print -n -- $cwd                                  # Print the path.
+  if (( ${#path_array} )) {                         # If there are still elements to process:
+    if (( ${#path_array} > 1 || ${#${path_array[1]}} > 3 )) {
+      # If there are more than one element left, or the last element is more than one, character
+      # long, add an ellipsis.
+      head+=('…')
+    } else {
+      head+=($path_array[1])                        # Otherwise, add the last element.
+    }
+  }
+  result=${prefix}${(j:/:)head}/${(j:/:)tail}       # Join everything together.
+  result=${result//\/…\/…/\/…}                      # Remove any '…/…' sequences.
+  result=${result//\/…\/…/\/…}                      # Remove any '…/…' sequences.
+  result=${result//\/…\/…/\/…}                      # Remove any '…/…' sequences.
+  print -r -- $result
 }
 
 _myzshrc_print_window_title() {
