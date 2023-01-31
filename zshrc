@@ -629,7 +629,7 @@ add-zsh-hook preexec _myzshrc_prompt_preexec
 # Window title ---------------------------------------------------------------------------------- #
 # Ellipsize a path to display it in a limited space.
 _myzshrc_ellipsized_path() {
-  (( ${#1} <= 40 )) && { print -r -- $1; return }   # If the path is short enough, just return it.
+  (( ${#1} <= 40 )) && { print -rn -- $1; return }  # If the path is short enough, just return it.
   local array=(${(s:/:)1})                          # Split the path into an array.
   local head=() tail=()                             # The head and tail of the path.
   local prefix=''                                   # '/' if the path is absolute, '' otherwise.
@@ -665,7 +665,7 @@ _myzshrc_ellipsized_path() {
   result=${result//\/…\/…/\/…}                      # Remove any '…/…' sequences.
   result=${result//\/…\/…/\/…}                      # Remove any '…/…' sequences.
   result=${result//[[:blank:]]…/…}                  # Remove any spaces before ellipses.
-  print -r -- $result
+  print -rn -- $result
 }
 
 _myzshrc_print_window_title() {
