@@ -671,6 +671,7 @@ _myzshrc_ellipsized_path() {
   result=${result//\/…\/…/\/…}                      # Remove any '…/…' sequences.
   result=${result//\/…\/…/\/…}                      # Remove any '…/…' sequences.
   result=${result//\/…\/…/\/…}                      # Remove any '…/…' sequences.
+  result=${result//[[:blank:]]##…/…}                # Remove any spaces before ellipses.
   print -r -- $result
 }
 
