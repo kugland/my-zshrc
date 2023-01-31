@@ -630,48 +630,41 @@ add-zsh-hook preexec _myzshrc_prompt_preexec
 # Ellipsize a path to display it in a limited space.
 _myzshrc_ellipsized_path() {
   (( ${#1} <= 40 )) && { print -r -- $1; return }   # If the path is short enough, just return it.
-  local path_array=(${(s:/:)1})                     # Split the path into an array.
+  local array=(${(s:/:)1})                          # Split the path into an array.
   local head=() tail=()                             # The head and tail of the path.
   local prefix=''                                   # '/' if the path is absolute, '' otherwise.
-  [[ $1 == '/'* ]] && prefix='/'                    # If the path is absolute, set the prefix.
+  [[ ${1[1]} == '/' ]] && prefix='/'                # If the path is absolute, set the prefix.
   local next=tail                                   # The next part of the path to be added.
   local result                                      # The result.
-  local element                                     # The current element being processed.
-  for (( i=1; $i <= ${#path_array}; i++ )) {
-    # If the current element is bigger than 22 characters, ellipsize it.
-    if [[ ${#path_array[$i]} -gt 23 ]] {
-      path_array[$i]=${path_array[$i]:0:20}…
-    }
+  local elm                                         # The current element being processed.
+  for (( i=1; $i <= ${#array}; i++ )) {             # Ellipsize elements bigger than 23 characters.
+    (( ${#array[$i]} > 23 )) && array[$i]=${array[$i]:0:20}…
   }
-  while [[ ${#:-${prefix}${(j:/:)head}/…/${(j:/:)tail}} -lt 40 && ${#path_array} -gt 0 ]] {
+  while (( ${#:-${prefix}${(j:/:)head}/…/${(j:/:)tail}} < 40 && ${#array} )) {
     # While the path is too long and there are still elements to process:
     case $next {       # Select the next part of the path to be added and remove it from the array.
-      head) element=$path_array[1]; shift path_array ;;
-      tail) element=$path_array[-1]; shift -p path_array ;;
+      head) elm=$array[1]; shift array ;;
+      tail) elm=$array[-1]; shift -p array ;;
     }
-    if [[ ${#:-${prefix}${(j:/:)head}/${element}/${(j:/:)tail}} -gt 40 && ${#element} -gt 3 ]] {
-      element='…'                                   # If it would be too long, replace it with '…'.
+    if (( ${#:-${prefix}${(j:/:)head}/${elm}/${(j:/:)tail}} > 40 && ${#elm} > 3 )) {
+      elm='…'                                       # If it would be too long, replace it with '…'.
     }
     case $next {                                    # Add the element to the path.
-      head) head+=($element); next=tail ;;
-      tail) tail=($element $tail); next=head ;;
+      head) head+=($elm); next=tail ;;
+      tail) tail=($elm $tail); next=head ;;
     }
-    [[ ${element} == '…' ]] && break                # If we had to ellipsize the path, stop.
+    [[ ${elm} == '…' ]] && break                    # If we had to ellipsize the path, stop.
   }
-  if (( ${#path_array} )) {                         # If there are still elements to process:
-    if (( ${#path_array} > 1 || ${#${path_array[1]}} > 3 )) {
-      # If there are more than one element left, or the last element is more than one, character
-      # long, add an ellipsis.
-      head+=('…')
-    } else {
-      head+=($path_array[1])                        # Otherwise, add the last element.
-    }
+  if (( ${#array} == 1 && ${#${array[1]}} <= 3 )) { # If a single elm is left with len<=3, add it.
+    head+=($array[1])
+  } elif (( ${#array} )) {                          # If there are still elements left, add '…'.
+    head+=('…')
   }
   result=${prefix}${(j:/:)head}/${(j:/:)tail}       # Join everything together.
   result=${result//\/…\/…/\/…}                      # Remove any '…/…' sequences.
   result=${result//\/…\/…/\/…}                      # Remove any '…/…' sequences.
   result=${result//\/…\/…/\/…}                      # Remove any '…/…' sequences.
-  result=${result//[[:blank:]]##…/…}                # Remove any spaces before ellipses.
+  result=${result//[[:blank:]]…/…}                  # Remove any spaces before ellipses.
   print -r -- $result
 }
 
