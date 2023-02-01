@@ -129,14 +129,14 @@ setopt no_hist_beep                                 # Don't beep when searching 
 setopt share_history                                # Share history between multiple shells.
 HISTSIZE=10000                                      # Maximum number of history entries in memory.
 SAVEHIST=10000                                      # Number of history entries to save to file.
-HISTFILE=/tmp/zsh-$UID/history                      # Set history file.
+HISTFILE=$TMPPREFIX-$UID/history                    # Set history file.
 readonly HISTSIZE SAVEHIST HISTFILE                 # Make the variables readonly.
 [[ $OSTYPE = linux-gnu ]] && setopt hist_fcntl_lock # Use fcntl() to lock the history file.
 # ----------------------------------------------------------------------------------------------- #
 
 
 # [ CREATE DIRECTORY FOR ZSH'S HISTORY AND COMPCACHE ]------------------------------------------- #
-2>/dev/null zf_mkdir -m 700 /tmp/zsh-$UID /tmp/zsh-$UID/zcompcache
+2>/dev/null zf_mkdir -m 700 $TMPPREFIX-$UID $TMPPREFIX-$UID/zcompcache
 # ----------------------------------------------------------------------------------------------- #
 
 
@@ -803,10 +803,10 @@ if [[ -n ${commands[git]} && -r /usr/share/gitstatus/gitstatus.plugin.zsh ]] {
 
 
 # [ COMPLETION SETUP ] -------------------------------------------------------------------------- #
-compinit -d /tmp/zsh-$UID/zcompcache/zcompdump
+compinit -d $TMPPREFIX-$UID/zcompcache/zcompdump
 bindkey -r '^X'{'^R','?',C,a,c,d,e,h,m,n,t,'~'} '^['{',',/,'~'}
 zstyle ':completion::complete:*' use-cache 1
-zstyle ':completion::complete:*' cache-path /tmp/zsh-$UID/zcompcache
+zstyle ':completion::complete:*' cache-path $TMPPREFIX-$UID/zcompcache
 zstyle ':completion:*' completer _complete _prefix
 zstyle ':completion:*' add-space true
 zstyle ':completion:*:*:*:*:*' menu select
@@ -887,7 +887,7 @@ alias ls='command ls -h --color=auto --indicator-style=slash --time-style=long-i
 alias diff='command diff --color=auto'              # Add colors to diff command.
 alias ip='command ip --color=auto'                  # Add colors to ip command.
 [[ -n $commands[python3] && -z $commands[python] ]] \
-    && alias python=python3                         # Alias python to python3 when not found
+  && alias python=python3                           # Alias python to python3 when not found
 
 # nmed - use vared to rename a file ------------------------------------------------------------- #
 nmed() {
@@ -908,7 +908,7 @@ nmed() {
 
 # isodate - print the current date in ISO format ------------------------------------------------ #
 isodate() {
-  if [[ "$1" = "-u" || "$1" = "--utc" ]] {
+    if [[ $1 =~ '^--utc|-u$' ]] {
     print -r -- $(date -u +%Y-%m-%d)
   } else {
     print -r -- $(date +%Y-%m-%d)
@@ -917,7 +917,7 @@ isodate() {
 
 # isotime - print the current time in ISO format ------------------------------------------------ #
 isotime() {
-  if [[ "$1" = "-u" || "$1" = "--utc" ]] {
+  if [[ $1 =~ '^--utc|-u$' ]] {
     print -r -- $(date -u +%H:%M:%S)
   } else {
     print -r -- $(date +%H:%M:%S)
