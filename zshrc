@@ -24,6 +24,11 @@ zmodload -F zsh/stat b:zstat
 # ----------------------------------------------------------------------------------------------- #
 
 
+# [ DETECT TERMUX ]------------------------------------------------------------------------------ #
+[[ $OSTYPE = linux-android && -n $TERMUX_VERSION && -d /data/data/com.termux/files/usr ]]
+_myzshrc_termux=$((! ?))                            # Set to 1 if running under Termux.
+
+
 # [ SOME SANE DEFAULTS ]------------------------------------------------------------------------- #
 export EDITOR=vim                                   # Use vim as the default editor.
 export GPG_TTY=$TTY                                 # Set the TTY for GPG pinentry.
@@ -39,9 +44,11 @@ export GPG_TTY=$TTY                                 # Set the TTY for GPG pinent
     shift
     for dir ($@) {
       [[ ! -e $dir || -h $dir ]] && continue        # Skip if it doesn't exist or it is a symlink.
-      (($(zstat +mode $dir) != 16877)) && continue  # Skip if mode is not 40775.
-      (($(zstat +uid $dir) != 0)) && continue       # Skip if owner is not root.
-      (($(zstat +gid $dir) != 0)) && continue       # Skip if group is not root.
+      if (( ! _myzshrc_termux )) {                  # The following checks fail under Termux.
+        (($(zstat +mode $dir) != 16877)) && continue # Skip if mode is not 40775.
+        (($(zstat +uid $dir) != 0)) && continue     # Skip if owner is not root.
+        (($(zstat +gid $dir) != 0)) && continue     # Skip if group is not root.
+      }
       eval ${var}+='( $dir )'                       # Add directory to the path.
     }
   }
@@ -49,9 +56,12 @@ export GPG_TTY=$TTY                                 # Set the TTY for GPG pinent
   append_path path /{usr/{local/,},}{s,}bin
   append_path path /usr/{,local/}games
   append_path path /snap/bin
-
   append_path ld_library_path /{usr/{local/,},}lib{,64,32}
-  append_path ld_library_path /usr/lib/jvm/default/lib/server/
+  append_path ld_library_path /usr/lib/jvm/default/lib/server
+  if (( _myzshrc_termux )) {
+    append_path path /data/data/com.termux/files/usr/bin
+    append_path ld_library_path /data/data/com.termux/files/usr/lib
+  }
 }
 
 # Dynamic linker -------------------------------------------------------------------------------- #
@@ -131,7 +141,7 @@ HISTSIZE=10000                                      # Maximum number of history 
 SAVEHIST=10000                                      # Number of history entries to save to file.
 HISTFILE=$TMPPREFIX-$UID/history                    # Set history file.
 readonly HISTSIZE SAVEHIST HISTFILE                 # Make the variables readonly.
-[[ $OSTYPE = linux-gnu ]] && setopt hist_fcntl_lock # Use fcntl() to lock the history file.
+[[ $OSTYPE = linux-* ]] && setopt hist_fcntl_lock   # Use fcntl() to lock the history file.
 # ----------------------------------------------------------------------------------------------- #
 
 
@@ -152,7 +162,7 @@ readonly _myzshrc_color8bit
 # 'zsh/nearcolor' to approximate 24-bit colors as 8-bit colors. On 4-bit terminals, your mileage
 # may vary; on $TERM = linux, for example, the resulting 256-color escapes will result in bright
 # white text.
-! ((_myzshrc_color24bit)) && is-at-least 5.7.0 $ZSH_VERSION && zmodload zsh/nearcolor
+! ((_myzshrc_color24bit)) && is-at-least 5.7.0 $ZSH_VERSION && zmodload zsh/nearcolor 2>/dev/null
 # ----------------------------------------------------------------------------------------------- #
 
 
@@ -196,7 +206,7 @@ _myzshrc_fstypecache_hash=""
 # Get current directory filesystem type.
 # Value is returned in variable REPLY.
 _myzshrc_fstypecache_get() {
-  local current_hash=${$(sha256sum /etc/mtab)[1]}   # Hash the contents of /etc/mtab
+  local current_hash=${$(sha256sum /proc/self/mounts)[1]} # Hash the contents of mounts file.
   if [[ $current_hash != $_myzshrc_fstypecache_hash ]] { # If the hash has changed,
     _myzshrc_fstypecache_hash=$current_hash         # Reset the cache.
     _myzshrc_fstypecache=( )
