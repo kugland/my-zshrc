@@ -226,10 +226,12 @@ _myzshrc_reset_terminal() {
   print -nr $'\e7\e[?1049l\e8'                      # Use main screen buffer.
   print -nr $'\e7\e[0;0r\e8'                        # DECSTBM: unset top/bottom margins.
   print -nr $'\e(B\e)B'                             # SCS: set G0 and G1 charsets to US-ASCII.
-  [[ $TERM != linux ]] && print -nr $'\e*A\e+A'     # SCS: set G2 and G3 charsets to Latin-1.
+  if ((!_myzshrc_termux)) {
+    [[ $TERM != linux ]] && print -nr $'\e*A\e+A'   # SCS: set G2 and G3 charsets to Latin-1.
+    print -nr $'\e%G'                               # Enable UTF-8 mode.
+  }
   print -nr $'\Co'                                  # Invoke G0 charset as GL
   print -nr $'\e~'                                  # Invoke G1 charset as GR.
-  print -nr $'\e%G'                                 # Enable UTF-8 mode.
   print -nr $'\e#5'                                 # DECSWL: single-width line.
   print -nr $'\e[3l'                                # DECCRM: don't show control characters.
   print -nr $'\e[20l'                               # LNM: disable automatic new lines.
@@ -571,8 +573,11 @@ _myzshrc_prompt_precmd() {
   ret=$?
   _myzshrc_reset_terminal
   _myzshrc_prompt_select
-  if (( $ret )) printf "\033]133;D;%s;aid=%s\007" $ret "$$"
-  printf "\033]133;A;cl=m;aid=%s\033\007" "$$"
+  if (( $ret )) {
+    print -rn $'\e]133;D;'"$ret"';aid=$\e\\'
+    print -rn $'\a'
+  }
+  print -rn $'\e]133;A;cl=m;aid=$\e\\'
   if [[ $_myzshrc_prompt = 'minimal' ]] {
     # Minimal prompt is a special case, since it doesn't include the user/host, and neither
     # has any RPROMPT/RPS2.
