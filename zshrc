@@ -104,6 +104,13 @@ autoload -Uz add-zsh-hook compinit is-at-least
 # ----------------------------------------------------------------------------------------------- #
 
 
+# [ SET TMP DIRECTORY ]-------------------------------------------------------------------------- #
+if ((!_myzshrc_termux)) {
+  _myzshrc_tmp=$TMPPREFIX-$UID
+} else {
+  _myzshrc_tmp=$HOME/.zshrc-tmp
+}
+
 # [ SET SHELL OPTIONS ]-------------------------------------------------------------------------- #
 export IFS=$' \t\n\x00'                             # Set IFS to space, tab, newline and null.
 setopt extended_glob                                # Enable Zsh extended globbing.
@@ -140,14 +147,14 @@ setopt no_hist_beep                                 # Don't beep when searching 
 setopt share_history                                # Share history between multiple shells.
 HISTSIZE=10000                                      # Maximum number of history entries in memory.
 SAVEHIST=10000                                      # Number of history entries to save to file.
-HISTFILE=$TMPPREFIX-$UID/history                    # Set history file.
+HISTFILE=$_myzshrc_tmp/history                      # Set history file.
 readonly HISTSIZE SAVEHIST HISTFILE                 # Make the variables readonly.
 [[ $OSTYPE = linux-* ]] && setopt hist_fcntl_lock   # Use fcntl() to lock the history file.
 # ----------------------------------------------------------------------------------------------- #
 
 
 # [ CREATE DIRECTORY FOR ZSH'S HISTORY AND COMPCACHE ]------------------------------------------- #
-2>/dev/null zf_mkdir -m 700 $TMPPREFIX-$UID $TMPPREFIX-$UID/zcompcache
+2>/dev/null zf_mkdir -m 700 $_myzshrc_tmp $_myzshrc_tmp/zcompcache
 # ----------------------------------------------------------------------------------------------- #
 
 
@@ -822,10 +829,10 @@ if [[ -n ${commands[git]} && -r /usr/share/gitstatus/gitstatus.plugin.zsh ]] {
 
 
 # [ COMPLETION SETUP ] -------------------------------------------------------------------------- #
-compinit -d $TMPPREFIX-$UID/zcompcache/zcompdump
+compinit -d $_myzshrc_tmp/zcompcache/zcompdump
 bindkey -r '^X'{'^R','?',C,a,c,d,e,h,m,n,t,'~'} '^['{',',/,'~'}
 zstyle ':completion::complete:*' use-cache 1
-zstyle ':completion::complete:*' cache-path $TMPPREFIX-$UID/zcompcache
+zstyle ':completion::complete:*' cache-path $_myzshrc_tmp/zcompcache
 zstyle ':completion:*' completer _complete _prefix
 zstyle ':completion:*' add-space true
 zstyle ':completion:*:*:*:*:*' menu select
