@@ -61,6 +61,7 @@ export GPG_TTY=$TTY                                 # Set the TTY for GPG pinent
   if (( _myzshrc_termux )) {
     append_path path /data/data/com.termux/files/usr/bin
     append_path ld_library_path /data/data/com.termux/files/usr/lib
+    append_path ld_library_path /system/lib64
   }
 }
 
