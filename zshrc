@@ -80,7 +80,7 @@ append_path() {                                     # Append a path to the PATH 
 }
 setopt null_glob
 for script (/etc/profile.d/*.sh) {
-  [[ -x "$script" ]] && emulate bash -c "source $script"  # Source script using bash emulation.
+  emulate bash -c "source $script"                  # Source script using bash emulation.
 }
 setopt no_null_glob
 unset script
