@@ -708,7 +708,7 @@ _myzshrc_print_window_title() {
   print -nr -- $cmd                                 # Print the command name.
   print -n $'\e\\'                                  # End the title escape sequence.
   if [[ -n $TMUX ]] {
-     tmux set -p '@myzshrc-current-directory' " $cwd" # Set the current directory for tmux.
+     tmux set -p '@myzshrc-current-directory' $cwd  # Set the current directory for tmux.
   }
 }
 
