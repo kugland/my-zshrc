@@ -979,16 +979,16 @@ if [[ -n ${commands[sshfs]} ]] {
 
 # tmux - show a nice menu to select session when tmux is run without any parameters ------------- #
 tmux() {
-  if [[ $# -ne 0 || -n $TMUX || -z ${commands[fzf]} ]] {
+  if [[ $# -ne 0 || -z ${commands[fzf]} ]] {
     command tmux "$@"
   } else {
     setopt local_options pipefail
-    PADDING_HORIZONTAL=$(( (COLUMNS / 2) - 33 ))
-    PADDING_HORIZONTAL=$(( PADDING_HORIZONTAL > 0 ? PADDING_HORIZONTAL : 0 ))
-    FZF_FORMAT=$'\e[33m#{session_id}\e[0m\t#{=/21/…:#{p21:session_name}}\t'
+    local PADDING_HORIZONTAL=$(( (COLUMNS / 2) - 33 ))
+    local PADDING_HORIZONTAL=$(( PADDING_HORIZONTAL > 0 ? PADDING_HORIZONTAL : 0 ))
+    local FZF_FORMAT=$'\e[33m#{session_id}\e[0m\t#{=/21/…:#{p21:session_name}}\t'
     FZF_FORMAT+=$'#{session_windows}\t#{t/f/%Y-%m-%d %H#:%M#:%S/:session_created}'
-    CREATE_NEW_SESSION='<Create new session>'
-    RESPONSE=$(
+    local CREATE_NEW_SESSION='<Create new session>'
+    local RESPONSE=$(
       (
         tmux list-sessions -F "$FZF_FORMAT" 2>/dev/null | sort -k1.7n,2
         print -Pr -- "%B%F{black}${CREATE_NEW_SESSION}%b%f"
@@ -998,7 +998,10 @@ tmux() {
     )
     if (( $? )) return 1
     if [[ "$RESPONSE" = $CREATE_NEW_SESSION ]] {
-      tmux new-session
+      RESPONSE="$(TMUX= tmux new-session -dP)"
+    }
+    if [[ -n $TMUX ]] {
+      tmux switch-client -t "$RESPONSE"
     } else {
       tmux attach -t "$RESPONSE"
     }
