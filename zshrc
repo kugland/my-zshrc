@@ -1243,6 +1243,7 @@ EXEC        1;32      # files with execute permission.
 .m4a        0;95
 .mka        0;95
 .mp3        0;95
+.mpc        0;95
 .oga        0;95
 .ogg        0;95
 .opus       0;95
@@ -1259,6 +1260,7 @@ EXEC        1;32      # files with execute permission.
 # playlists and similar
 .cue        0;95
 .m3u        0;95
+.m3u8       0;95
 .pls        0;95
 .xspf       0;95
 # vector graphics
@@ -1372,6 +1374,7 @@ EXEC        1;32      # files with execute permission.
 .pptx       0;36
 .rst        0;36
 .sib        0;36
+.srt        0;36
 .tex        0;36
 .txt        0;36
 .vcard      0;36
