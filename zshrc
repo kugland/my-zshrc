@@ -220,7 +220,14 @@ _myzshrc_fstypecache_get() {
     _myzshrc_fstypecache=( )
   }
   if ! (( ${+_myzshrc_fstypecache[$PWD]} )) {       # If value if not found for $PWD, compute it.
-    _myzshrc_fstypecache[$PWD]=$(findmnt -fn -d backward -o FSTYPE --target $PWD)
+    local fstype=$(findmnt -fn -d backward -o FSTYPE --target $PWD)
+    if [[ $fstype = fuse ]] {                   # If the filesystem is FUSE-based,
+      local source=$(findmnt -fn -d backward -o SOURCE --target $PWD)
+      if [[ $source =~ '.*[#].*' ]] {             # If the source contains a hash,
+        fstype=fuse.${source//[#]*}               # Use the part after the hash as the fstype.
+      }
+    }
+    _myzshrc_fstypecache[$PWD]=$fstype            # Cache the value.
   }
   REPLY=${_myzshrc_fstypecache[$PWD]}
 }
@@ -748,7 +755,9 @@ if [[ -n ${commands[git]} && -r /usr/share/gitstatus/gitstatus.plugin.zsh ]] {
       }
       if [[ ! -d "$curdir/.git" ]] return 0         # Succeed if we're not in a git repo.
       _myzshrc_fstypecache_get                      # Get the filesystem type of the current dir.
-      if [[ $REPLY = (automount|fuse.sshfs|nfs) ]] return 0 # Succeed if it's a remote filesystem.
+      if [[ $REPLY = (automount|fuse.sshfs|fuse.curlftpfs|nfs) ]] {
+        return 0 # Succeed if it's a remote filesystem.
+      }
       return 1                                      # Otherwise, fail.
     } && {
       if (( _myzshrc_gitstatus_started && _myzshrc_gitstatus_last_active < (EPOCHSECONDS - 120) )) {
@@ -1073,7 +1082,7 @@ _myzshrc_dependency \
     if [[ -n $ZSH_HIGHLIGHT_VERSION ]] {
       _myzshrc_disable_syntax_highlight_on_netfs_precmd() {
         _myzshrc_fstypecache_get                    # Get the filesystem type of the cur dir.
-        if [[ $REPLY = (automount|fuse.sshfs|nfs) ]] { # Check if it's a network filesystem.
+        if [[ $REPLY = (automount|fuse.sshfs|fuse.curlftpfs|nfs) ]] { # Check if it's a network fs.
           ZSH_HIGHLIGHT_MAXLENGTH=0                 # Disable syntax highlight if it is.
         } else {
           unset ZSH_HIGHLIGHT_MAXLENGTH             # Enable it otherwise.
