@@ -1275,6 +1275,7 @@ EXEC        1;32      # files with execute permission.
 # vector graphics
 .ai         0;95
 .cdr        0;95
+.djvu       0;95
 .dwf        0;95
 .dwg        0;95
 .emf        0;95
