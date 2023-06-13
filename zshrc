@@ -344,7 +344,7 @@ _myzshrc_bindkeys() {
 bindkey -D command emacs vicmd viins viopp visual
 
 # Remove most key bindings in the main keymap.
-bindkey -r '^'{'[','?',{,'[[','[O'}{A,B,C,D},E,F,G,H,I,J,K,L,N,O,P,Q,R,S,T,U,V,W,X,Y,Z}
+bindkey -r '^'{'[','?',{,'[[','[O'}{A,B,C,D},E,F,G,H,I,K,L,N,O,P,Q,R,S,T,U,V,W,X,Y,Z}
 
 # Basic keyboard bindings ----------------------------------------------------------------------- #
 () {
