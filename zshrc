@@ -500,14 +500,14 @@ _myzshrc_prompt_simple() {
     'prompt' 'before-userhost' '%B%F{%(!.1.2)}'
     'prompt' 'before-path' '%f%b:%B%4F'
     'prompt' 'after-path' '%f%b%# '
-    'prompt' 'ssh-indicator' '%B%0F[%f%bssh%B%0F]%f%b '
+    'prompt' 'ssh-indicator' '%B%F{243}[%f%bssh%B%F{243}]%f%b '
     'prompt' 'overwrite-indicator' '%K{4}%B%7F over %f%b%k'
     'prompt' 'jobs-indicator' '%K{5}%B%7F %j job%(2j.s.) %f%b%k'
     'prompt' 'error-indicator' '%K{1}%B%7F %? %f%b%k'
-    'prompt' 'continuation' '%B%0F» %f%b'
-    'prompt' 'eol-mark' '%B%0F·%f%b'
+    'prompt' 'continuation' '%B%F{243}» %f%b'
+    'prompt' 'eol-mark' '%B%F{243}·%f%b'
     'gitstatus' 'git-prefix' '%B%1Fgit%f%b'
-    'gitstatus' 'stash-count' '%B%0F*'
+    'gitstatus' 'stash-count' '%B%F{243}*'
     'gitstatus' 'staged-count' '%B%2F+'
     'gitstatus' 'unstaged-count' '%B%1F+'
     'gitstatus' 'untracked-count' '%B%1F*'
@@ -536,8 +536,8 @@ $'}\uE0B4%k%F{'$userhost_color$'}\uE0B4%f '
   zstyle ':myzshrc:prompt' overwrite-indicator $'%4F\uE0B6%K{4}%B%7Fover%k%b%4F\uE0B4%f'
   zstyle ':myzshrc:prompt' jobs-indicator $'%5F\uE0B6%K{5}%B%7F%j job%(2j.s.)%k%b%5F\uE0B4%f'
   zstyle ':myzshrc:prompt' error-indicator $'%1F\uE0B6%K{1}%B%7F%?%k%b%1F\uE0B4%f'
-  zstyle ':myzshrc:prompt' continuation $'%B%0F\uf054%f%b'
-  zstyle ':myzshrc:prompt' eol-mark '%B%0Fﱢ%b%f'
+  zstyle ':myzshrc:prompt' continuation $'%B%F{243}\uf054%f%b'
+  zstyle ':myzshrc:prompt' eol-mark '%B%F{243}▴%b%f'
   zstyle ':myzshrc:gitstatus' git-prefix '%B%208F%f%b'
   zstyle ':myzshrc:gitstatus' stash-count $'%245F\uf4a6%B%250F'
   zstyle ':myzshrc:gitstatus' staged-count '%106F%B%154F'
@@ -803,10 +803,10 @@ if [[ -n ${commands[git]} && -r /usr/share/gitstatus/gitstatus.plugin.zsh ]] {
     if [[ -n $VCS_STATUS_LOCAL_BRANCH ]] {
       where=$VCS_STATUS_LOCAL_BRANCH                # Use local branch name, e.g. 'master'.
     } elif [[ -n $VCS_STATUS_TAG ]] {
-      p+='%F{black}%B#%b%f'                         # Add # to signify a tag.
+      p+='%F{243}%B#%b%f'                           # Add # to signify a tag.
       where=$VCS_STATUS_TAG                         # Use tag name, e.g. '#v1.0.0'.
     } else {
-      p+='%F{black}%B@%b%f'                         # Add @ to signify a commit.
+      p+='%F{243}%B@%b%f'                           # Add @ to signify a commit.
       where=${VCS_STATUS_COMMIT[1,8]}               # Use commit hash (8 chars), e.g. '@04bbb413'.
     }
     (($#where > 32)) && where[13,-13]="…"           # truncate long branch names/tags
@@ -899,7 +899,7 @@ zstyle ':completion:*' single-ignored show
 # [ EXIT MESSAGE ]------------------------------------------------------------------------------- #
 # Print a message when exiting the shell.
 _myzshrc_exit_message_zshexit() {
-  print -P "%B%F{black}-----%f zsh%b (%B%F{yellow}$$%f%b) %Bfinished %F{black}-----%f%b"
+  print -P "%B%F{243}-----%f zsh%b (%B%F{yellow}$$%f%b) %Bfinished %F{243}-----%f%b"
 }
 add-zsh-hook zshexit _myzshrc_exit_message_zshexit
 # ----------------------------------------------------------------------------------------------- #
@@ -1046,7 +1046,7 @@ _myzshrc_dependency() {
   [[ -d ~/.zshrc-deps ]] || mkdir ~/.zshrc-deps || return 1
   if [[ ! -d ~/.zshrc-deps/$pkgid ]] {
     {
-      print -Pnr $'%B%0F[%b%fzshrc%B%0F]%b%f %F{green}Installing dependency \e[0;4m$name\e[0m ... '
+      print -Pnr $'%B%F{243}[%b%fzshrc%B%F{243}]%b%f %F{green}Installing dependency \e[0;4m$name\e[0m ... '
       2>/dev/null curl -sSL -o ~/.zshrc-deps/${pkgid}.tar.gz $tarball_url || {
         error=1
         return
