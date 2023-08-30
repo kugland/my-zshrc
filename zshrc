@@ -1111,7 +1111,7 @@ _myzshrc_dependency \
 
 # zsh completions ------------------------------------------------------------------------------- #
 # renovate: datasource=github-tags depName=zsh-users/zsh-completions
-ZSH_COMPLETIONS_VERSION=0.34.0
+ZSH_COMPLETIONS_VERSION=0.35.0
 
 _myzshrc_dependency \
   zsh-completions \
