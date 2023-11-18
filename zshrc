@@ -35,8 +35,10 @@ export GPG_TTY=$TTY                                 # Set the TTY for GPG pinent
 
 # Paths ----------------------------------------------------------------------------------------- #
 () {
-  typeset -gxUT PATH path ':'; path=()
-  typeset -gxUT LD_LIBRARY_PATH ld_library_path ':'; ld_library_path=()
+  typeset -gxUT PATH path ':'
+  typeset -gxUT LD_LIBRARY_PATH ld_library_path ':'
+
+  [[ -e /etc/NIXOS ]] && return                      # Skip if running under NixOS.
 
   append_path() {
     local var=$1
@@ -52,6 +54,9 @@ export GPG_TTY=$TTY                                 # Set the TTY for GPG pinent
       eval ${var}+='( $dir )'                       # Add directory to the path.
     }
   }
+
+  path=()
+  ld_library_path=()
 
   append_path path /{usr/{local/,},}{s,}bin
   append_path path /usr/{,local/}games
@@ -74,17 +79,19 @@ typeset -gtx LD_POINTER_GUARD=1                     # Enable pointer guard.
 
 
 # [ LOAD SCRIPTS FROM /ETC/PROFILE.D ]----------------------------------------------------------- #
-append_path() {                                     # Append a path to the PATH variable.
-  emulate -L zsh                                    # This function will be available for scripts
-  path+=($1)                                        # in /etc/profile.d.
+if [[ -o login ]] {
+  append_path() {                                     # Append a path to the PATH variable.
+    emulate -L zsh                                    # This function will be available for scripts
+    path+=($1)                                        # in /etc/profile.d.
+  }
+  setopt null_glob
+  for script (/etc/profile{,.d/*.sh}) {
+    emulate bash -c "source $script"                  # Source script using bash emulation.
+  }
+  setopt no_null_glob
+  unset script
+  unset -f append_path
 }
-setopt null_glob
-for script (/etc/profile.d/*.sh) {
-  emulate bash -c "source $script"                  # Source script using bash emulation.
-}
-setopt no_null_glob
-unset script
-unset -f append_path
 # ----------------------------------------------------------------------------------------------- #
 
 
@@ -633,6 +640,9 @@ _myzshrc_prompt_precmd() {
     if (( ${${VIRTUAL_ENV:+1}:-0} )) \
       RPROMPT+=$' %F{#4b8bbe}(venv %F{#ffe873}'"$(basename "$VIRTUAL_ENV")"$'%F{#4b8bbe})%f'
 
+    if (( ${${IN_NIX_SHELL:+1}:-0} )) \
+      RPROMPT+=$' %F{#7ebae4}(nix-shell)%f'
+
     local level
     PS2=''; for level ({1..16}) { PS2+="%(${level}_.${continuation}.)" }; PS2+=' '
 
@@ -736,8 +746,8 @@ add-zsh-hook preexec _myzshrc_window_title_preexec
 # Show git status in RPROMPT -------------------------------------------------------------------- #
 # On Arch Linux, install the gitstatus, gitstatus-bin or gitstatus-git packages from AUR.
 # For other distros, cf. https://github.com/romkatv/gitstatus.
-if [[ -n ${commands[git]} && -r /usr/share/gitstatus/gitstatus.plugin.zsh ]] {
-  source /usr/share/gitstatus/gitstatus.plugin.zsh
+if [[ -n ${commands[git]} && -r ${${commands[gitstatusd]}:h}/../share/gitstatus/gitstatus.plugin.zsh ]] {
+  source ${${commands[gitstatusd]}:h}/../share/gitstatus/gitstatus.plugin.zsh
 
   _myzshrc_gitstatus_started=0                      # Whether gitstatus has been started.
   _myzshrc_gitstatus_last_active=$EPOCHSECONDS      # Last time gitstatus was active.
@@ -1027,7 +1037,6 @@ if [[ $TTY =~ '/dev/ttyS?[0-9]+' ]] {
 # ----------------------------------------------------------------------------------------------- #
 
 
-
 # [ LOAD PLUGINS ]------------------------------------------------------------------------------- #
 # Download and load plugins.
 
@@ -1128,6 +1137,12 @@ _myzshrc_dependency \
   zsh-defer \
   https://github.com/romkatv/zsh-defer/tarball/${ZSH_DEFER_DIGEST} \
   && source ~/.zshrc-deps/zsh-defer/zsh-defer.plugin.zsh
+# ----------------------------------------------------------------------------------------------- #
+
+
+# zsh-nix-shell --------------------------------------------------------------------------------- #
+[[ -f /etc/NIXOS ]] && [[ -x /run/current-system/sw/share/zsh-nix-shell/nix-shell.plugin.zsh ]] \
+  && source /run/current-system/sw/share/zsh-nix-shell/nix-shell.plugin.zsh
 # ----------------------------------------------------------------------------------------------- #
 
 
