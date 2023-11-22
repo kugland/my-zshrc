@@ -849,7 +849,11 @@ if [[ -n ${commands[git]} && -r ${${commands[gitstatusd]}:h}/../share/gitstatus/
 
 
 # [ COMPLETION SETUP ] -------------------------------------------------------------------------- #
-compinit -d $_myzshrc_tmp/zcompcache/zcompdump
+if (( (EPOCHSECONDS - $(zstat +mtime "$_myzshrc_tmp/zcompcache/zcompdump")) > 1000 )) {
+    compinit -d $_myzshrc_tmp/zcompcache/zcompdump
+} else {
+    compinit -C -d $_myzshrc_tmp/zcompcache/zcompdump
+}
 bindkey -r '^X'{'^R','?',C,a,c,d,e,h,m,n,t,'~'} '^['{',',/,'~'}
 zstyle ':completion::complete:*' use-cache 1
 zstyle ':completion::complete:*' cache-path $_myzshrc_tmp/zcompcache
