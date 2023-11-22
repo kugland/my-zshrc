@@ -283,7 +283,7 @@ _myzshrc_reset_terminal() {
 
 # [ LOAD LS COLORS ]----------------------------------------------------------------------------- #
 # Load colors for LS_COLORS from the appendix of the .zshrc file.
-eval $(dircolors -b <(sed -ne '/.*DIR_COLORS_APPENDIX$/,//{s///g;p};' ~/.zshrc))
+eval $(dircolors -b <(sed -ne '/.*DIR_COLORS_APPENDIX$/,//{s///g;p};' "$0"))
 # ----------------------------------------------------------------------------------------------- #
 
 
@@ -1451,6 +1451,7 @@ EXEC        1;32      # files with execute permission.
 .lua        0;36
 .m          0;36
 .m4         0;36
+.nix        0;36
 .p          0;36
 .pas        0;36
 .php        0;36
