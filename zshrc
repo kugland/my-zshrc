@@ -21,11 +21,11 @@
 # [ WHO AM I? ]---------------------------------------------------------------------------------- #
 # Let's do this early, before other files are opened. This rather strange workaround assumes that
 # zsh will keep this script open while it executes.
-for f (/proc/$$/fd/*) {
+for f ( /proc/$$/fd/* ) {
     [[ ! -f $f ]] && continue
     # The string on the next line is just a meaningless random string.
-    if ( grep -q -F 5ozBNfkD3fOikjzL9XdeWVzJT9dt626K $f ) {
-      __myzshrc_scripts=${f:A}
+    if ( grep -qF 5ozBNfkD3fOikjzL9XdeWVzJT9dt626K $f ) {
+      __myzshrc_script=${f:A}
       break
     }
 }
@@ -297,7 +297,7 @@ _myzshrc_reset_terminal() {
 
 # [ LOAD LS COLORS ]----------------------------------------------------------------------------- #
 # Load colors for LS_COLORS from the appendix of the .zshrc file.
-eval $(dircolors -b <(sed -ne '/.*DIR_COLORS_APPENDIX$/,//{s///g;p};' $__myzshrc_scripts))
+eval $(dircolors -b <(sed -ne '/.*DIR_COLORS_APPENDIX$/,//{s///g;p};' $__myzshrc_script))
 # ----------------------------------------------------------------------------------------------- #
 
 
