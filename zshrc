@@ -51,6 +51,7 @@ export GPG_TTY=$TTY                                 # Set the TTY for GPG pinent
 () {
   typeset -gxUT PATH path ':'
   typeset -gxUT LD_LIBRARY_PATH ld_library_path ':'
+  typeset -U fpath manpath
 
   [[ -e /etc/NIXOS ]] && return                      # Skip if running under NixOS.
 
@@ -863,8 +864,15 @@ if [[ -n ${commands[git]} && -r ${${commands[gitstatusd]}:h}/../share/gitstatus/
 
 
 # [ COMPLETION SETUP ] -------------------------------------------------------------------------- #
+if [[ -f /etc/NIXOS ]] {
+  for profile ( ${(z)NIX_PROFILES} ) {
+    fpath+=( $profile/share/zsh/site-functions )
+    fpath+=( $profile/share/zsh/$ZSH_VERSION/functions )
+    fpath+=( $profile/share/zsh/vendor-completions )
+  }
+}
 () {
-  ZCOMPDUMP="$_myzshrc_tmp/zcompcache/zcompdump"
+  local ZCOMPDUMP="$_myzshrc_tmp/zcompcache/zcompdump"
   if (( EPOCHSECONDS - $( [[ -e $ZCOMPDUMP ]] && zstat +mtime $ZCOMPDUMP || print 0 ) > 1000 )) {
     compinit -d $ZCOMPDUMP
   } else {
