@@ -25,7 +25,7 @@ for f ( /proc/$$/fd/* ) {
     [[ ! -f $f ]] && continue
     # The string on the next line is just a meaningless random string.
     if ( grep -qF 5ozBNfkD3fOikjzL9XdeWVzJT9dt626K $f ) {
-      __myzshrc_script=${f:A}
+      _myzshrc_script=${f:A}
       break
     }
 }
@@ -297,7 +297,7 @@ _myzshrc_reset_terminal() {
 
 # [ LOAD LS COLORS ]----------------------------------------------------------------------------- #
 # Load colors for LS_COLORS from the appendix of the .zshrc file.
-eval $(dircolors -b <(sed -ne '/.*DIR_COLORS_APPENDIX$/,//{s///g;p};' $__myzshrc_script))
+eval $(dircolors -b <(sed -ne '/.*DIR_COLORS_APPENDIX$/,//{s///g;p};' $_myzshrc_script))
 # ----------------------------------------------------------------------------------------------- #
 
 
@@ -1148,7 +1148,6 @@ _myzshrc_dependency \
   && {
     source ~/.zshrc-deps/zsh-completions/zsh-completions.plugin.zsh
   }
-# ----------------------------------------------------------------------------------------------- #
 
 # zsh defer ------------------------------------------------------------------------------------- #
 # renovate: datasource=git-refs depName=https://github.com/romkatv/zsh-defer branch=master
@@ -1158,18 +1157,15 @@ _myzshrc_dependency \
   zsh-defer \
   https://github.com/romkatv/zsh-defer/tarball/${ZSH_DEFER_DIGEST} \
   && source ~/.zshrc-deps/zsh-defer/zsh-defer.plugin.zsh
-# ----------------------------------------------------------------------------------------------- #
-
 
 # zsh-nix-shell --------------------------------------------------------------------------------- #
 [[ -f /etc/NIXOS ]] && [[ -x /run/current-system/sw/share/zsh-nix-shell/nix-shell.plugin.zsh ]] \
   && source /run/current-system/sw/share/zsh-nix-shell/nix-shell.plugin.zsh
-# ----------------------------------------------------------------------------------------------- #
 
 
 # [ UNSET UNNEEDED VARIABLES AND FUNCTIONS ]----------------------------------------------------- #
 unset ZSH_HISTORY_SUBSTR_SEARCH_DIGEST ZSH_SYNTAX_HIGHLIGHTING_VERSION ZSH_COMPLETIONS_VERSION
-unset _myzshrc_keys _myzshrc_color24bit _myzshrc_putty
+unset _myzshrc_keys _myzshrc_color24bit _myzshrc_putty _myzshrc_script
 unset -f _myzshrc_bindkeys _myzshrc_dependency
 # ----------------------------------------------------------------------------------------------- #
 
