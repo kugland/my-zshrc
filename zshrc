@@ -18,6 +18,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
+# [ WHO AM I? ]---------------------------------------------------------------------------------- #
+# Let's do this early, before other files are opened. This rather strange workaround assumes that
+# zsh will keep this script open while it executes.
+for f (/proc/$$/fd/*) {
+    [[ ! -f $f ]] && continue
+    # The string on the next line is just a meaningless random string.
+    if ( grep -q -F 5ozBNfkD3fOikjzL9XdeWVzJT9dt626K $f ) {
+      __myzshrc_scripts=${f:A}
+      break
+    }
+}
+# ----------------------------------------------------------------------------------------------- #
+
+
 # [ LOAD FUNCTIONS AND MODULES ]----------------------------------------------------------------- #
 zmodload zsh/parameter
 zmodload -F zsh/stat b:zstat
@@ -283,7 +297,7 @@ _myzshrc_reset_terminal() {
 
 # [ LOAD LS COLORS ]----------------------------------------------------------------------------- #
 # Load colors for LS_COLORS from the appendix of the .zshrc file.
-eval $(dircolors -b <(sed -ne '/.*DIR_COLORS_APPENDIX$/,//{s///g;p};' "$0"))
+eval $(dircolors -b <(sed -ne '/.*DIR_COLORS_APPENDIX$/,//{s///g;p};' $__myzshrc_scripts))
 # ----------------------------------------------------------------------------------------------- #
 
 
@@ -849,10 +863,13 @@ if [[ -n ${commands[git]} && -r ${${commands[gitstatusd]}:h}/../share/gitstatus/
 
 
 # [ COMPLETION SETUP ] -------------------------------------------------------------------------- #
-if (( (EPOCHSECONDS - $(zstat +mtime "$_myzshrc_tmp/zcompcache/zcompdump")) > 1000 )) {
-    compinit -d $_myzshrc_tmp/zcompcache/zcompdump
-} else {
-    compinit -C -d $_myzshrc_tmp/zcompcache/zcompdump
+() {
+  ZCOMPDUMP="$_myzshrc_tmp/zcompcache/zcompdump"
+  if (( EPOCHSECONDS - $( [[ -e $ZCOMPDUMP ]] && zstat +mtime $ZCOMPDUMP || print 0 ) > 1000 )) {
+    compinit -d $ZCOMPDUMP
+  } else {
+    compinit -C -d $ZCOMPDUMP
+  }
 }
 bindkey -r '^X'{'^R','?',C,a,c,d,e,h,m,n,t,'~'} '^['{',',/,'~'}
 zstyle ':completion::complete:*' use-cache 1
@@ -1155,9 +1172,6 @@ unset ZSH_HISTORY_SUBSTR_SEARCH_DIGEST ZSH_SYNTAX_HIGHLIGHTING_VERSION ZSH_COMPL
 unset _myzshrc_keys _myzshrc_color24bit _myzshrc_putty
 unset -f _myzshrc_bindkeys _myzshrc_dependency
 # ----------------------------------------------------------------------------------------------- #
-
-
-((1))                                               # All's well that ends well
 
 
 # [ APPENDIX: DIR_COLORS ]----------------------------------------------------------------------- #
@@ -1493,6 +1507,9 @@ EXEC        1;32      # files with execute permission.
 .rpmsave    0;90
 DIR_COLORS_APPENDIX
 # ----------------------------------------------------------------------------------------------- #
+
+
+((1))                                               # All's well that ends well
 
 
 # vim: set ts=2 sw=2 tw=100 et :
