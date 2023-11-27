@@ -21,13 +21,16 @@
 # [ WHO AM I? ]---------------------------------------------------------------------------------- #
 # Let's do this early, before other files are opened. This rather strange workaround assumes that
 # zsh will keep this script open while it executes.
-for f ( /proc/$$/fd/* ) {
+() {
+  setopt local_options null_glob extended_glob
+  for f ( /proc/$$/fd/*(#q-r.) ) {
     [[ ! -f $f ]] && continue
     # The string on the next line is just a meaningless random string.
     if ( grep -qF 5ozBNfkD3fOikjzL9XdeWVzJT9dt626K $f ) {
       _myzshrc_script=${f:A}
       break
     }
+  }
 }
 # ----------------------------------------------------------------------------------------------- #
 
@@ -135,13 +138,16 @@ if ((!_myzshrc_termux)) {
 
 # [ SET SHELL OPTIONS ]-------------------------------------------------------------------------- #
 export IFS=$' \t\n\x00'                             # Set IFS to space, tab, newline and null.
-setopt extended_glob                                # Enable Zsh extended globbing.
 setopt interactive_comments                         # Enable comments in interactive shells.
 setopt no_beep                                      # Disable beep on errors.
 setopt no_correct                                   # Damn you, autocorrect!
 [[ $TERM != linux ]] && setopt combining_chars      # Assume the terminal supports combining chars.
                                                     # There are other terminals that don't support
                                                     # combining chars, but I don't use them.
+
+# Expansion ------------------------------------------------------------------------------------- #
+setopt extended_glob                                # Extended glob options
+setopt no_null_glob                                 # Error when glob doesn't match anything
 
 # Prompt options -------------------------------------------------------------------------------- #
 setopt no_prompt_bang                               # Disable Zsh ! in prompt expansion.
@@ -168,7 +174,7 @@ setopt hist_verify                                  # History expansion just loa
 setopt no_hist_beep                                 # Don't beep when searching history.
 setopt share_history                                # Share history between multiple shells.
 HISTSIZE=10000                                      # Maximum number of history entries in memory.
-SAVEHIST=10000                                      # Number of history entries to save to file.
+SAVEHIST=99999                                      # Number of history entries to save to file.
 HISTFILE=$_myzshrc_tmp/history                      # Set history file.
 readonly HISTSIZE SAVEHIST HISTFILE                 # Make the variables readonly.
 [[ $OSTYPE = linux-* ]] && setopt hist_fcntl_lock   # Use fcntl() to lock the history file.
@@ -1173,7 +1179,7 @@ _myzshrc_dependency \
 
 # [ UNSET UNNEEDED VARIABLES AND FUNCTIONS ]----------------------------------------------------- #
 unset ZSH_HISTORY_SUBSTR_SEARCH_DIGEST ZSH_SYNTAX_HIGHLIGHTING_VERSION ZSH_COMPLETIONS_VERSION
-unset _myzshrc_keys _myzshrc_color24bit _myzshrc_putty _myzshrc_script
+unset _myzshrc_keys _myzshrc_color24bit _myzshrc_putty
 unset -f _myzshrc_bindkeys _myzshrc_dependency
 # ----------------------------------------------------------------------------------------------- #
 
