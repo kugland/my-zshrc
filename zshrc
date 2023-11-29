@@ -47,7 +47,7 @@ _myzshrc_termux=$((! ?))                            # Set to 1 if running under 
 
 
 # [ SOME SANE DEFAULTS ]------------------------------------------------------------------------- #
-export EDITOR=${EDITOR:-${${commands[nano]}         # If no editor is set, try nano.
+export EDITOR=${EDITOR:-${commands[nano]}}          # If no editor is set, try nano.
 export VISUAL=${VISUAL:-$EDITOR}
 export GPG_TTY=$TTY                                 # Set the TTY for GPG pinentry.
 
