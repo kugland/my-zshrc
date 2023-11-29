@@ -47,7 +47,7 @@ _myzshrc_termux=$((! ?))                            # Set to 1 if running under 
 
 
 # [ SOME SANE DEFAULTS ]------------------------------------------------------------------------- #
-export EDITOR=vim                                   # Use vim as the default editor.
+export EDITOR=${EDITOR:-${${commands[nano]}         # If no editor is set, try nano.
 export GPG_TTY=$TTY                                 # Set the TTY for GPG pinentry.
 
 # Paths ----------------------------------------------------------------------------------------- #
