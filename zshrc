@@ -1117,7 +1117,7 @@ _myzshrc_dependency() {
 
 # zsh syntax highlighting ----------------------------------------------------------------------- #
 # renovate: datasource=github-tags depName=zsh-users/zsh-syntax-highlighting
-ZSH_SYNTAX_HIGHLIGHTING_VERSION=0.7.1
+ZSH_SYNTAX_HIGHLIGHTING_VERSION=0.8.0
 
 _myzshrc_dependency \
   zsh-syntax-highlighting \
