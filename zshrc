@@ -124,6 +124,56 @@ if [[ -o login ]] {
 #                                   START OF INTERACTIVE SECTION
 # ----------------------------------------------------------------------------------------------- #
 
+# [ LOAD PLUGINS ]------------------------------------------------------------------------------- #
+# Download and load plugins.
+
+# Check for dependency and install it if missing.
+# Parameters:
+#   $1: name
+#   $2: url of the tarball
+_myzshrc_dependency() {
+  local name=$1
+  local tarball_url=$2
+  local version=${${$(print -n $tarball_url | sha256sum)[1]}[1,16]}
+  local pkgid=$name-$version
+  local error=0
+
+  [[ -d ~/.zshrc-deps ]] || mkdir ~/.zshrc-deps || return 1
+  if [[ ! -d ~/.zshrc-deps/$pkgid ]] {
+    {
+      print -Pnr $'%B%F{243}[%b%fzshrc%B%F{243}]%b%f %F{green}Installing dependency \e[0;4m$name\e[0m ... '
+      2>/dev/null curl -sSL -o ~/.zshrc-deps/${pkgid}.tar.gz $tarball_url || {
+        error=1
+        return
+      }
+      tar --transform "s,^[^/]*,$pkgid,g" -xzf ~/.zshrc-deps/${pkgid}.tar.gz -C ~/.zshrc-deps || {
+        error=1
+        return
+      }
+      rm ~/.zshrc-deps/${pkgid}.tar.gz
+      ln -s $pkgid ~/.zshrc-deps/$name || {
+        error=1
+        return
+      }
+    } always {
+      if (( error )) {
+        print -P '%B%F{red}failed%b%f'
+      } else {
+        print -P '%B%F{green}OK%b%f'
+      }
+    }
+  }
+}
+
+# zsh defer ------------------------------------------------------------------------------------- #
+# renovate: datasource=git-refs depName=https://github.com/romkatv/zsh-defer branch=master
+ZSH_DEFER_DIGEST=1c75faff4d8584afe090b06db11991c8c8d62055
+
+_myzshrc_dependency \
+  zsh-defer \
+  https://github.com/romkatv/zsh-defer/tarball/${ZSH_DEFER_DIGEST} \
+  && source ~/.zshrc-deps/zsh-defer/zsh-defer.plugin.zsh
+
 # [ LOAD FUNCTIONS AND MODULES FOR INTERACTIVE SHELLS ]------------------------------------------ #
 zmodload zsh/complist zsh/terminfo zsh/zutil zsh/zle
 zmodload -m -F zsh/files b:zf_mkdir
@@ -306,7 +356,11 @@ _myzshrc_reset_terminal() {
 
 # [ LOAD LS COLORS ]----------------------------------------------------------------------------- #
 # Load colors for LS_COLORS from the appendix of the .zshrc file.
-eval $(dircolors -b <(sed -ne '/.*DIR_COLORS_APPENDIX$/,//{s///g;p};' $_myzshrc_script))
+_myzshrc_load_ls_colors() {
+  eval $(dircolors -b <(sed -ne '/.*DIR_COLORS_APPENDIX$/,//{s///g;p};' $_myzshrc_script))
+  unset -f _myzshrc_load_ls_colors
+}
+zsh-defer _myzshrc_load_ls_colors
 # ----------------------------------------------------------------------------------------------- #
 
 
@@ -514,7 +568,6 @@ _myzshrc_overwrite_preexec() {
 }
 
 add-zsh-hook preexec _myzshrc_overwrite_preexec
-
 
 # [ PROMPT SETUP ]------------------------------------------------------------------------------- #
 # That's the way I like it.
@@ -872,46 +925,46 @@ if [[ -n ${commands[git]} && -r ${${commands[gitstatusd]}:h}/../share/gitstatus/
 
 
 # [ COMPLETION SETUP ] -------------------------------------------------------------------------- #
-if [[ -f /etc/NIXOS ]] {
-  for profile ( ${(z)NIX_PROFILES} ) {
-    fpath+=( $profile/share/zsh/site-functions )
-    fpath+=( $profile/share/zsh/$ZSH_VERSION/functions )
-    fpath+=( $profile/share/zsh/vendor-completions )
+_myzshrc_completion_setup() {
+  if [[ -f /etc/NIXOS ]] {
+    for profile ( ${(z)NIX_PROFILES} ) {
+      fpath+=( $profile/share/zsh/site-functions )
+      fpath+=( $profile/share/zsh/$ZSH_VERSION/functions )
+      fpath+=( $profile/share/zsh/vendor-completions )
+    }
   }
-}
-() {
-  local ZCOMPDUMP="$_myzshrc_tmp/zcompcache/zcompdump"
-  if (( EPOCHSECONDS - $( [[ -e $ZCOMPDUMP ]] && zstat +mtime $ZCOMPDUMP || print 0 ) > 1000 )) {
-    compinit -d $ZCOMPDUMP
-  } else {
-    compinit -C -d $ZCOMPDUMP
+  () {
+    local ZCOMPDUMP="$_myzshrc_tmp/zcompcache/zcompdump"
+    if (( EPOCHSECONDS - $( [[ -e $ZCOMPDUMP ]] && zstat +mtime $ZCOMPDUMP || print 0 ) > 1000 )) {
+      compinit -d $ZCOMPDUMP
+    } else {
+      compinit -C -d $ZCOMPDUMP
+    }
   }
-}
-bindkey -r '^X'{'^R','?',C,a,c,d,e,h,m,n,t,'~'} '^['{',',/,'~'}
-zstyle ':completion::complete:*' use-cache 1
-zstyle ':completion::complete:*' cache-path $_myzshrc_tmp/zcompcache
-zstyle ':completion:*' completer _complete _prefix
-zstyle ':completion:*' add-space true
-zstyle ':completion:*:*:*:*:*' menu select
-zstyle ":completion:*:commands" rehash 1
-zstyle ':completion:*:default' list-colors $ls_colors
-zstyle ':completion:*:warnings' format '%B%F{red}No matches for %d.%f%b'
-zstyle ':completion:*:matches' group 'yes'
-zstyle ':completion:*:descriptions' format '%B%K{cyan}%F{white}  %d  %f%k%b'
-zstyle ':completion:*' group-name ""
-zstyle ':completion:*' accept-exact '*(N)'
+  bindkey -r '^X'{'^R','?',C,a,c,d,e,h,m,n,t,'~'} '^['{',',/,'~'}
+  zstyle ':completion::complete:*' use-cache 1
+  zstyle ':completion::complete:*' cache-path $_myzshrc_tmp/zcompcache
+  zstyle ':completion:*' completer _complete _prefix
+  zstyle ':completion:*' add-space true
+  zstyle ':completion:*:*:*:*:*' menu select
+  zstyle ":completion:*:commands" rehash 1
+  zstyle ':completion:*:default' list-colors $ls_colors
+  zstyle ':completion:*:warnings' format '%B%F{red}No matches for %d.%f%b'
+  zstyle ':completion:*:matches' group 'yes'
+  zstyle ':completion:*:descriptions' format '%B%K{cyan}%F{white}  %d  %f%k%b'
+  zstyle ':completion:*' group-name ""
+  zstyle ':completion:*' accept-exact '*(N)'
 
-# Processes ------------------------------------------------------------------------------------- #
-zstyle ':completion:*:processes' menu yes select
-zstyle ':completion:*:processes' force-list always
-zstyle ':completion:*:processes' command 'ps -eo pid,user,cmd'
-zstyle ':completion:*:processes' list-colors "=(#b) #([0-9]#)*=0=01;32"
-zstyle ':completion:*:processes-names' command "ps -eo exe= | sed -e 's,^.*/,,g' | sort -f | uniq"
-zstyle ':completion:*:processes-names' list-colors '=*=01;32'
+  # Processes ------------------------------------------------------------------------------------- #
+  zstyle ':completion:*:processes' menu yes select
+  zstyle ':completion:*:processes' force-list always
+  zstyle ':completion:*:processes' command 'ps -eo pid,user,cmd'
+  zstyle ':completion:*:processes' list-colors "=(#b) #([0-9]#)*=0=01;32"
+  zstyle ':completion:*:processes-names' command "ps -eo exe= |sed -e 's,^.*/,,g' |sort -f |uniq"
+  zstyle ':completion:*:processes-names' list-colors '=*=01;32'
 
-# ssh, scp, sftp and sshfs -----------------------------------------------------------------------#
-# Load ssh hosts from ~/.ssh/config
-() {
+  # ssh, scp, sftp and sshfs -----------------------------------------------------------------------#
+  # Load ssh hosts from ~/.ssh/config
   local -a ssh_hosts=()
   if [[ -r ~/.ssh/config ]] {
     ssh_hosts=(${${${(@M)${(f)"$(<~/.ssh/config)"}:#Host *}#Host }:#*[*?]*}) 2>/dev/null
@@ -931,14 +984,17 @@ zstyle ':completion:*:processes-names' list-colors '=*=01;32'
   [[ -n ${commands[sshfs]} ]] && _user_at_host() { _ssh_hosts "$@" }
   # Don't complete hosts from /etc/hosts
   zstyle -e ':completion:*' hosts 'reply=()'
-}
 
-# Hide entries from completion ------------------------------------------------------------------ #
-zstyle ':completion:*:parameters' ignored-patterns \
-  '(_*|(chpwd|periodic|precmd|preexec|zshaddhistory|zshexit)_functions|PERIOD)'
-zstyle ':completion:*:functions' ignored-patterns \
-  '(_*|pre(cmd|exec)|TRAP*)'
-zstyle ':completion:*' single-ignored show
+  # Hide entries from completion ------------------------------------------------------------------ #
+  zstyle ':completion:*:parameters' ignored-patterns \
+    '(_*|(chpwd|periodic|precmd|preexec|zshaddhistory|zshexit)_functions|PERIOD)'
+  zstyle ':completion:*:functions' ignored-patterns \
+    '(_*|pre(cmd|exec)|TRAP*)'
+  zstyle ':completion:*' single-ignored show
+
+  unset -f _myzshrc_completion_setup
+}
+zsh-defer _myzshrc_completion_setup
 # ----------------------------------------------------------------------------------------------- #
 
 
@@ -1007,20 +1063,10 @@ isotime() {
   }
 }
 
-_isodate () {
-  _arguments {-u,--utc}'[Print the current date in UTC]'
-}
-compdef _isodate isodate
-compdef _isodate isotime
-
 # detach - run a command in the background ------------------------------------------------------ #
 detach() {
   ( nohup "$@" >/dev/null 2>&1 & )
 }
-_detach () {
-  _arguments '*:: : _normal -p $service'
-}
-compdef _detach detach
 
 # sshfs-sudo - mount sshfs remote with root privileges using sudo ------------------------------- #
 if [[ -n ${commands[sshfs]} ]] {
@@ -1031,7 +1077,6 @@ if [[ -n ${commands[sshfs]} ]] {
 '[Tt][Ee][Mm][[:blank:]]+sftp[[:blank:]]+/{s///;s/[[:blank:]]*(|#.*)$//;p;q}" '\
 '/etc/ssh/sshd_config)"' "$@"
   }
-  compdef _sshfs sshfs-sudo
 }
 
 # tmux - show a nice menu to select session when tmux is run without any parameters ------------- #
@@ -1074,47 +1119,6 @@ if [[ $TTY =~ '/dev/ttyS?[0-9]+' ]] {
 # ----------------------------------------------------------------------------------------------- #
 
 
-# [ LOAD PLUGINS ]------------------------------------------------------------------------------- #
-# Download and load plugins.
-
-# Check for dependency and install it if missing.
-# Parameters:
-#   $1: name
-#   $2: url of the tarball
-_myzshrc_dependency() {
-  local name=$1
-  local tarball_url=$2
-  local version=${${$(print -n $tarball_url | sha256sum)[1]}[1,16]}
-  local pkgid=$name-$version
-  local error=0
-
-  [[ -d ~/.zshrc-deps ]] || mkdir ~/.zshrc-deps || return 1
-  if [[ ! -d ~/.zshrc-deps/$pkgid ]] {
-    {
-      print -Pnr $'%B%F{243}[%b%fzshrc%B%F{243}]%b%f %F{green}Installing dependency \e[0;4m$name\e[0m ... '
-      2>/dev/null curl -sSL -o ~/.zshrc-deps/${pkgid}.tar.gz $tarball_url || {
-        error=1
-        return
-      }
-      tar --transform "s,^[^/]*,$pkgid,g" -xzf ~/.zshrc-deps/${pkgid}.tar.gz -C ~/.zshrc-deps || {
-        error=1
-        return
-      }
-      rm ~/.zshrc-deps/${pkgid}.tar.gz
-      ln -s $pkgid ~/.zshrc-deps/$name || {
-        error=1
-        return
-      }
-    } always {
-      if (( error )) {
-        print -P '%B%F{red}failed%b%f'
-      } else {
-        print -P '%B%F{green}OK%b%f'
-      }
-    }
-  }
-}
-
 # zsh syntax highlighting ----------------------------------------------------------------------- #
 # renovate: datasource=github-tags depName=zsh-users/zsh-syntax-highlighting
 ZSH_SYNTAX_HIGHLIGHTING_VERSION=0.8.0
@@ -1123,11 +1127,11 @@ _myzshrc_dependency \
   zsh-syntax-highlighting \
   https://github.com/zsh-users/zsh-syntax-highlighting/tarball/${ZSH_SYNTAX_HIGHLIGHTING_VERSION} \
   && {
-    source ~/.zshrc-deps/zsh-syntax-highlighting/zsh-syntax-highlighting.plugin.zsh
+    zsh-defer source ~/.zshrc-deps/zsh-syntax-highlighting/zsh-syntax-highlighting.plugin.zsh
 
     # Disable syntax highlighting when under network directories.
-    if [[ -n $ZSH_HIGHLIGHT_VERSION ]] {
-      _myzshrc_disable_syntax_highlight_on_netfs_precmd() {
+    _myzshrc_disable_syntax_highlight_on_netfs_precmd() {
+      if [[ -n $ZSH_HIGHLIGHT_VERSION ]] {
         _myzshrc_fstypecache_get                    # Get the filesystem type of the cur dir.
         if [[ $REPLY = (automount|fuse.sshfs|fuse.curlftpfs|nfs) ]] { # Check if it's a network fs.
           ZSH_HIGHLIGHT_MAXLENGTH=0                 # Disable syntax highlight if it is.
@@ -1147,7 +1151,7 @@ _myzshrc_dependency \
   zsh-history-substring-search \
   https://github.com/zsh-users/zsh-history-substring-search/tarball/${ZSH_HISTORY_SUBSTR_SEARCH_DIGEST} \
   && {
-    source ~/.zshrc-deps/zsh-history-substring-search/zsh-history-substring-search.plugin.zsh
+    zsh-defer source ~/.zshrc-deps/zsh-history-substring-search/zsh-history-substring-search.plugin.zsh
 
     # Bind Ctrl+PageUp and Ctrl+PageDown to history-substring-search-{up,down}.
     _myzshrc_bindkeys CtrlPageUp history-substring-search-up
@@ -1162,21 +1166,12 @@ _myzshrc_dependency \
   zsh-completions \
   https://github.com/zsh-users/zsh-completions/tarball/${ZSH_COMPLETIONS_VERSION} \
   && {
-    source ~/.zshrc-deps/zsh-completions/zsh-completions.plugin.zsh
+    zsh-defer source ~/.zshrc-deps/zsh-completions/zsh-completions.plugin.zsh
   }
-
-# zsh defer ------------------------------------------------------------------------------------- #
-# renovate: datasource=git-refs depName=https://github.com/romkatv/zsh-defer branch=master
-ZSH_DEFER_DIGEST=1c75faff4d8584afe090b06db11991c8c8d62055
-
-_myzshrc_dependency \
-  zsh-defer \
-  https://github.com/romkatv/zsh-defer/tarball/${ZSH_DEFER_DIGEST} \
-  && source ~/.zshrc-deps/zsh-defer/zsh-defer.plugin.zsh
 
 # zsh-nix-shell --------------------------------------------------------------------------------- #
 [[ -f /etc/NIXOS ]] && [[ -x /run/current-system/sw/share/zsh-nix-shell/nix-shell.plugin.zsh ]] \
-  && source /run/current-system/sw/share/zsh-nix-shell/nix-shell.plugin.zsh
+  && zsh-defer source /run/current-system/sw/share/zsh-nix-shell/nix-shell.plugin.zsh
 
 
 # [ UNSET UNNEEDED VARIABLES AND FUNCTIONS ]----------------------------------------------------- #
@@ -1184,6 +1179,9 @@ unset ZSH_HISTORY_SUBSTR_SEARCH_DIGEST ZSH_SYNTAX_HIGHLIGHTING_VERSION ZSH_COMPL
 unset _myzshrc_keys _myzshrc_color24bit _myzshrc_putty
 unset -f _myzshrc_bindkeys _myzshrc_dependency
 # ----------------------------------------------------------------------------------------------- #
+
+
+return 0
 
 
 # [ APPENDIX: DIR_COLORS ]----------------------------------------------------------------------- #
@@ -1519,9 +1517,6 @@ EXEC        1;32      # files with execute permission.
 .rpmsave    0;90
 DIR_COLORS_APPENDIX
 # ----------------------------------------------------------------------------------------------- #
-
-
-((1))                                               # All's well that ends well
 
 
 # vim: set ts=2 sw=2 tw=100 et :
