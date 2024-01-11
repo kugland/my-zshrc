@@ -611,8 +611,8 @@ _myzshrc_prompt_fancy() {
   _myzshrc_prompt_prev='fancy'
   zstyle ':myzshrc:prompt' prompt-type 'fancy'
   local userhost_color='%(!.#b24742.#47a730)'
-  zstyle ':myzshrc:prompt' before-userhost "%K{$userhost_color}%B%F{97} "
-  zstyle ':myzshrc:prompt' before-path '%b%F{'$userhost_color$'}%K{#547bb5}\uE0B4 %B%F{97}'
+  zstyle ':myzshrc:prompt' before-userhost '%K{'$userhost_color'}%B%F{255} '
+  zstyle ':myzshrc:prompt' before-path '%b%F{'$userhost_color$'}%K{#547bb5}\uE0B4 %B%F{255}'
   zstyle ':myzshrc:prompt' after-path '%b%F{#547bb5}%K{'$userhost_color$'}\uE0B4%k%F{'$userhost_color$'}\uE0B4%f '
   zstyle ':myzshrc:prompt' ssh-indicator $'%K{238}%15F ssh %K{'$userhost_color$'}'
   zstyle ':myzshrc:prompt' overwrite-indicator $'%4F\uE0B6%K{4}%B%7Fover%k%b%4F\uE0B4%f'
