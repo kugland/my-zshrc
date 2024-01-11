@@ -344,10 +344,10 @@ _myzshrc_reset_terminal() {
   if [[ $TERM = linux ]] {                          # Color palette for Linux virtual console.
     local idx rgb
     for idx rgb (
-      0 050505  1 cc0000  2 4e9a06  3 c4a000        # Black, red, green, yellow
-      4 3465a4  5 75507b  6 06989a  7 a8b3a8        # Blue, magenta, cyan, white
-      8 555753  9 ef2929  A 8ae234  B fce94f        # Bri black, bri red, bri green, bri yellow
-      C 729fcf  D ad7fa8  E 34e2e2  F ffffff        # Bri blue, bri magenta, bri cyan, bri white
+      0 181716  1 c74f49  2 51c236  3 c4903b        # Black, red, green, yellow
+      4 648ecf  5 b475ca  6 3bc4bf  7 ccc8c4        # Blue, magenta, cyan, white
+      8 83827b  9 ff7068  a 7fff57  b ffbf57        # Bri black, bri red, bri green, bri yellow
+      c 7db7ff  d df91f4  e 57fffc  f ffffff        # Bri blue, bri magenta, bri cyan, bri white
     ) print -nr -- $'\e]P'"${idx}${rgb}"$'\e\\'
   }
 }
@@ -611,8 +611,8 @@ _myzshrc_prompt_fancy() {
   _myzshrc_prompt_prev='fancy'
   zstyle ':myzshrc:prompt' prompt-type 'fancy'
   local userhost_color='%(!.#b24742.#47a730)'
-  zstyle ':myzshrc:prompt' before-userhost "%K{$userhost_color}%B%7F "
-  zstyle ':myzshrc:prompt' before-path '%b%F{'$userhost_color$'}%K{#547bb5}\uE0B4 %B%7F'
+  zstyle ':myzshrc:prompt' before-userhost "%K{$userhost_color}%B%F{97} "
+  zstyle ':myzshrc:prompt' before-path '%b%F{'$userhost_color$'}%K{#547bb5}\uE0B4 %B%F{97}'
   zstyle ':myzshrc:prompt' after-path '%b%F{#547bb5}%K{'$userhost_color$'}\uE0B4%k%F{'$userhost_color$'}\uE0B4%f '
   zstyle ':myzshrc:prompt' ssh-indicator $'%K{238}%15F ssh %K{'$userhost_color$'}'
   zstyle ':myzshrc:prompt' overwrite-indicator $'%4F\uE0B6%K{4}%B%7Fover%k%b%4F\uE0B4%f'
