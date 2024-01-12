@@ -124,8 +124,8 @@ if [[ -o login ]] {
 #                                   START OF INTERACTIVE SECTION
 # ----------------------------------------------------------------------------------------------- #
 
-# [ LOAD PLUGINS ]------------------------------------------------------------------------------- #
-# Download and load plugins.
+# [ LOAD PLUGINS (FIRST PART) ]------------------------------------------------------------------ #
+# First we need to load zsh-defer. Later we'll load the rest of the plugins.
 
 # Check for dependency and install it if missing.
 # Parameters:
@@ -173,6 +173,8 @@ _myzshrc_dependency \
   zsh-defer \
   https://github.com/romkatv/zsh-defer/tarball/${ZSH_DEFER_DIGEST} \
   && source ~/.zshrc-deps/zsh-defer/zsh-defer.plugin.zsh
+# ----------------------------------------------------------------------------------------------- #
+
 
 # [ LOAD FUNCTIONS AND MODULES FOR INTERACTIVE SHELLS ]------------------------------------------ #
 zmodload zsh/complist zsh/terminfo zsh/zutil zsh/zle
@@ -925,76 +927,71 @@ if [[ -n ${commands[git]} && -r ${${commands[gitstatusd]}:h}/../share/gitstatus/
 
 
 # [ COMPLETION SETUP ] -------------------------------------------------------------------------- #
-_myzshrc_completion_setup() {
-  if [[ -f /etc/NIXOS ]] {
-    for profile ( ${(z)NIX_PROFILES} ) {
-      fpath+=( $profile/share/zsh/site-functions )
-      fpath+=( $profile/share/zsh/$ZSH_VERSION/functions )
-      fpath+=( $profile/share/zsh/vendor-completions )
-    }
+if [[ -f /etc/NIXOS ]] {
+  for profile ( ${(z)NIX_PROFILES} ) {
+    fpath+=( $profile/share/zsh/site-functions )
+    fpath+=( $profile/share/zsh/$ZSH_VERSION/functions )
+    fpath+=( $profile/share/zsh/vendor-completions )
   }
-  () {
-    local ZCOMPDUMP="$_myzshrc_tmp/zcompcache/zcompdump"
-    if (( EPOCHSECONDS - $( [[ -e $ZCOMPDUMP ]] && zstat +mtime $ZCOMPDUMP || print 0 ) > 1000 )) {
-      compinit -d $ZCOMPDUMP
-    } else {
-      compinit -C -d $ZCOMPDUMP
-    }
-  }
-  bindkey -r '^X'{'^R','?',C,a,c,d,e,h,m,n,t,'~'} '^['{',',/,'~'}
-  zstyle ':completion::complete:*' use-cache 1
-  zstyle ':completion::complete:*' cache-path $_myzshrc_tmp/zcompcache
-  zstyle ':completion:*' completer _complete _prefix
-  zstyle ':completion:*' add-space true
-  zstyle ':completion:*:*:*:*:*' menu select
-  zstyle ":completion:*:commands" rehash 1
-  zstyle ':completion:*:default' list-colors $ls_colors
-  zstyle ':completion:*:warnings' format '%B%F{red}No matches for %d.%f%b'
-  zstyle ':completion:*:matches' group 'yes'
-  zstyle ':completion:*:descriptions' format '%B%K{cyan}%F{white}  %d  %f%k%b'
-  zstyle ':completion:*' group-name ""
-  zstyle ':completion:*' accept-exact '*(N)'
-
-  # Processes ------------------------------------------------------------------------------------- #
-  zstyle ':completion:*:processes' menu yes select
-  zstyle ':completion:*:processes' force-list always
-  zstyle ':completion:*:processes' command 'ps -eo pid,user,cmd'
-  zstyle ':completion:*:processes' list-colors "=(#b) #([0-9]#)*=0=01;32"
-  zstyle ':completion:*:processes-names' command "ps -eo exe= |sed -e 's,^.*/,,g' |sort -f |uniq"
-  zstyle ':completion:*:processes-names' list-colors '=*=01;32'
-
-  # ssh, scp, sftp and sshfs -----------------------------------------------------------------------#
-  # Load ssh hosts from ~/.ssh/config
-  local -a ssh_hosts=()
-  if [[ -r ~/.ssh/config ]] {
-    ssh_hosts=(${${${(@M)${(f)"$(<~/.ssh/config)"}:#Host *}#Host }:#*[*?]*}) 2>/dev/null
-    ssh_hosts=(${(s/ /)${ssh_hosts}})
-    if (( ${#ssh_hosts} )) {
-      zstyle ':completion:*:scp:*' hosts $ssh_hosts
-      zstyle ':completion:*:sftp:*' hosts $ssh_hosts
-      zstyle ':completion:*:ssh:*' hosts $ssh_hosts
-      zstyle ':completion:*:sshfs:*' hosts $ssh_hosts
-    }
-  }
-  zstyle ':completion:*:scp:*' users
-  zstyle ':completion:*:sftp:*' users
-  zstyle ':completion:*:ssh:*' users
-  zstyle ':completion:*:sshfs:*' users
-  # Workaround for sshfs
-  [[ -n ${commands[sshfs]} ]] && _user_at_host() { _ssh_hosts "$@" }
-  # Don't complete hosts from /etc/hosts
-  zstyle -e ':completion:*' hosts 'reply=()'
-
-  # Hide entries from completion ------------------------------------------------------------------ #
-  zstyle ':completion:*:parameters' ignored-patterns \
-    '(_*|(chpwd|periodic|precmd|preexec|zshaddhistory|zshexit)_functions|PERIOD)'
-  zstyle ':completion:*:functions' ignored-patterns \
-    '(_*|pre(cmd|exec)|TRAP*)'
-  zstyle ':completion:*' single-ignored show
-
-  unset -f _myzshrc_completion_setup
 }
-zsh-defer _myzshrc_completion_setup
+() {
+  local ZCOMPDUMP="$_myzshrc_tmp/zcompcache/zcompdump"
+  if (( EPOCHSECONDS - $( [[ -e $ZCOMPDUMP ]] && zstat +mtime $ZCOMPDUMP || print 0 ) > 1000 )) {
+    compinit -d $ZCOMPDUMP
+  } else {
+    compinit -C -d $ZCOMPDUMP
+  }
+}
+bindkey -r '^X'{'^R','?',C,a,c,d,e,h,m,n,t,'~'} '^['{',',/,'~'}
+zstyle ':completion::complete:*' use-cache 1
+zstyle ':completion::complete:*' cache-path $_myzshrc_tmp/zcompcache
+zstyle ':completion:*' completer _complete _prefix
+zstyle ':completion:*' add-space true
+zstyle ':completion:*:*:*:*:*' menu select
+zstyle ":completion:*:commands" rehash 1
+zstyle ':completion:*:default' list-colors $ls_colors
+zstyle ':completion:*:warnings' format '%B%F{red}No matches for %d.%f%b'
+zstyle ':completion:*:matches' group 'yes'
+zstyle ':completion:*:descriptions' format '%B%K{cyan}%F{white}  %d  %f%k%b'
+zstyle ':completion:*' group-name ""
+zstyle ':completion:*' accept-exact '*(N)'
+
+# Processes ------------------------------------------------------------------------------------- #
+zstyle ':completion:*:processes' menu yes select
+zstyle ':completion:*:processes' force-list always
+zstyle ':completion:*:processes' command 'ps -eo pid,user,cmd'
+zstyle ':completion:*:processes' list-colors "=(#b) #([0-9]#)*=0=01;32"
+zstyle ':completion:*:processes-names' command "ps -eo exe= |sed -e 's,^.*/,,g' |sort -f |uniq"
+zstyle ':completion:*:processes-names' list-colors '=*=01;32'
+
+# ssh, scp, sftp and sshfs -----------------------------------------------------------------------#
+# Load ssh hosts from ~/.ssh/config
+local -a ssh_hosts=()
+if [[ -r ~/.ssh/config ]] {
+  ssh_hosts=(${${${(@M)${(f)"$(<~/.ssh/config)"}:#Host *}#Host }:#*[*?]*}) 2>/dev/null
+  ssh_hosts=(${(s/ /)${ssh_hosts}})
+  if (( ${#ssh_hosts} )) {
+    zstyle ':completion:*:scp:*' hosts $ssh_hosts
+    zstyle ':completion:*:sftp:*' hosts $ssh_hosts
+    zstyle ':completion:*:ssh:*' hosts $ssh_hosts
+    zstyle ':completion:*:sshfs:*' hosts $ssh_hosts
+  }
+}
+zstyle ':completion:*:scp:*' users
+zstyle ':completion:*:sftp:*' users
+zstyle ':completion:*:ssh:*' users
+zstyle ':completion:*:sshfs:*' users
+# Workaround for sshfs
+[[ -n ${commands[sshfs]} ]] && _user_at_host() { _ssh_hosts "$@" }
+# Don't complete hosts from /etc/hosts
+zstyle -e ':completion:*' hosts 'reply=()'
+
+# Hide entries from completion ------------------------------------------------------------------ #
+zstyle ':completion:*:parameters' ignored-patterns \
+  '(_*|(chpwd|periodic|precmd|preexec|zshaddhistory|zshexit)_functions|PERIOD)'
+zstyle ':completion:*:functions' ignored-patterns \
+  '(_*|pre(cmd|exec)|TRAP*)'
+zstyle ':completion:*' single-ignored show
 # ----------------------------------------------------------------------------------------------- #
 
 
@@ -1118,6 +1115,9 @@ if [[ $TTY =~ '/dev/ttyS?[0-9]+' ]] {
 }
 # ----------------------------------------------------------------------------------------------- #
 
+
+# [ LOAD PLUGINS (SECOND PART) ]----------------------------------------------------------------- #
+# Load the rest of the plugins.
 
 # zsh syntax highlighting ----------------------------------------------------------------------- #
 # renovate: datasource=github-tags depName=zsh-users/zsh-syntax-highlighting
