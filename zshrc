@@ -1106,6 +1106,29 @@ tmux() {
     }
   }
 }
+
+# dockersh - run a shell inside a docker container ---------------------------------------------- #
+dockersh() {
+  if [[ $# -ne 0 || -z ${commands[fzf]} || -z ${commands[docker]} ]] {
+    command dockersh "$@"
+  } else {
+    setopt local_options pipefail
+    local PADDING_HORIZONTAL=$(( (COLUMNS / 2) - 60 ))
+    local PADDING_HORIZONTAL=$(( PADDING_HORIZONTAL > 0 ? PADDING_HORIZONTAL : 0 ))
+    docker ps --format '{{.ID}}  {{.Image}} / {{.Names}}' \
+      | fzf -m -1 --ansi --margin=30%,$PADDING_HORIZONTAL --prompt='⟩ ' --pointer='►' \
+            --cycle --border=rounded --header 'name          image / container' --layout=reverse \
+            --info=hidden \
+      | sed 's/ .*//g' \
+      | xargs -I'{}' -o docker exec -ti {} sh -c '
+          if [ -x /bin/bash ]; then
+            /bin/bash
+          else
+            /bin/sh
+          fi
+      '
+  }
+}
 # ----------------------------------------------------------------------------------------------- #
 
 
