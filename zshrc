@@ -821,6 +821,18 @@ _myzshrc_window_title_preexec() {
 add-zsh-hook precmd _myzshrc_window_title_precmd
 add-zsh-hook preexec _myzshrc_window_title_preexec
 
+# [ REPORT CWD WITH OSC 7 ]---------------------------------------------------------------------- #
+_myzshrc_osc7_chpwd() {
+  if (( ! ZSH_SUBSHELL )) {
+    emulate -L zsh # also sets localoptions for us
+    setopt extendedglob
+    local LC_ALL=C
+    printf '\e]7;file://%s%s\e\' $HOST ${PWD//(#m)([^@-Za-z&-;_~])/%${(l:2::0:)$(([##16]#MATCH))}}
+  }
+}
+
+add-zsh-hook -Uz chpwd _myzshrc_osc7_chpwd
+
 # Show git status in RPROMPT -------------------------------------------------------------------- #
 # On Arch Linux, install the gitstatus, gitstatus-bin or gitstatus-git packages from AUR.
 # For other distros, cf. https://github.com/romkatv/gitstatus.
