@@ -58,7 +58,7 @@ export GPG_TTY=$TTY                                 # Set the TTY for GPG pinent
   typeset -gxUT LD_LIBRARY_PATH ld_library_path ':'
   typeset -U fpath manpath
 
-  [[ -e /etc/NIXOS ]] && return                      # Skip if running under NixOS.
+  [[ -n $__ETC_PROFILE_NIX_SOURCED || -e /etc/NIXOS ]] && return    # Skip if running under Nix.
 
   append_path() {
     local var=$1
