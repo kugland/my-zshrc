@@ -1510,6 +1510,7 @@ EXEC        1;32      # files with execute permission.
 .lua        0;36
 .m          0;36
 .m4         0;36
+.nim        0;36
 .nix        0;36
 .p          0;36
 .pas        0;36
@@ -1521,6 +1522,7 @@ EXEC        1;32      # files with execute permission.
 .s          0;36
 .S          0;36
 .scheme     0;36
+.scm        0;36
 .sh         0;36
 .sql        0;36
 .toml       0;36
@@ -1528,7 +1530,9 @@ EXEC        1;32      # files with execute permission.
 .tsx        0;36
 .xml        0;36
 .xslt       0;36
+.yaml       0;36
 .yml        0;36
+.zig        0;36
 .zsh        0;36
 
 # -------------------------------
