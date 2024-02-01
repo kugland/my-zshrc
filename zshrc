@@ -246,6 +246,8 @@ readonly HISTSIZE SAVEHIST HISTFILE                 # Make the variables readonl
 # color will also support 256-color.
 [[ $COLORTERM = (24bit|truecolor) ]]; _myzshrc_color24bit=$(( ! $? ))
 ((_myzshrc_color24bit)) || [[ $TERM = *256color* ]]; _myzshrc_color8bit=$(( ! $? ))
+readonly _myzshrc_color24bit
+readonly _myzshrc_color24bit
 readonly _myzshrc_color8bit
 
 # If 24-bit color is not supported, and Zsh version is at least 5.7.0, we can use the module
@@ -578,71 +580,79 @@ add-zsh-hook preexec _myzshrc_overwrite_preexec
 # A simple prompt that will work nicely in a console with limited charset and only 16 colors,
 # such as the Linux console.
 _myzshrc_prompt_simple() {
-  _myzshrc_prompt='simple'
-  _myzshrc_prompt_prev='simple'
+  _myzshrc_prompt=simple
+  _myzshrc_prompt_prev=simple
   for g k v (
-    'prompt' 'prompt-type' 'simple'
-    'prompt' 'before-userhost' '%B%F{%(!.1.2)}'
-    'prompt' 'before-path' '%f%b:%B%4F'
-    'prompt' 'after-path' '%f%b%# '
-    'prompt' 'ssh-indicator' '%B%F{243}[%f%bssh%B%F{243}]%f%b '
-    'prompt' 'overwrite-indicator' '%K{4}%B%7F over %f%b%k'
-    'prompt' 'jobs-indicator' '%K{5}%B%7F %j job%(2j.s.) %f%b%k'
-    'prompt' 'error-indicator' '%K{1}%B%7F %? %f%b%k'
-    'prompt' 'continuation' '%B%F{243}» %f%b'
-    'prompt' 'eol-mark' '%B%F{243}¤%f%b'
-    'gitstatus' 'git-prefix' '%B%1Fgit%f%b'
-    'gitstatus' 'stash-count' '%B%F{243}*'
-    'gitstatus' 'staged-count' '%B%2F+'
-    'gitstatus' 'unstaged-count' '%B%1F+'
-    'gitstatus' 'untracked-count' '%B%1F*'
-    'gitstatus' 'commits-ahead' '%6F%B↑'
-    'gitstatus' 'commits-behind' '%6F%B↓'
-    'gitstatus' 'push-commits-ahead' '%6F%B←'
-    'gitstatus' 'push-commits-behind' '%6F%B→'
-    'gitstatus' 'action' '%B%1F'
-    'gitstatus' 'num-conflicted' '%1F!%B'
-  ) { zstyle ":myzshrc:$g" $k $v; }
+    prompt prompt-type simple
+    prompt before-userhost '%B%F{%(!.1.2)}'
+    prompt before-path '%f%b:%B%4F'
+    prompt after-path '%f%b%# '
+    prompt ssh-indicator '%B%F{243}[%f%bssh%B%F{243}]%f%b '
+    prompt overwrite-indicator '%K{4}%B%7F over %f%b%k'
+    prompt jobs-indicator '%K{5}%B%7F %j job%(2j.s.) %f%b%k'
+    prompt error-indicator '%K{1}%B%7F %? %f%b%k'
+    prompt continuation '%B%F{243}» %f%b'
+    prompt eol-mark '%B%F{243}¤%f%b'
+    gitstatus git-prefix $'%B%1Fgit%f%b'
+    gitstatus stash-count '%B%F{243}*'
+    gitstatus staged-count '%B%2F+'
+    gitstatus unstaged-count '%B%1F+'
+    gitstatus untracked-count '%B%1F*'
+    gitstatus commits-ahead '%6F%B↑'
+    gitstatus commits-behind '%6F%B↓'
+    gitstatus push-commits-ahead '%6F%B←'
+    gitstatus push-commits-behind '%6F%B→'
+    gitstatus action '%B%1F'
+    gitstatus num-conflicted '%1F!%B'
+  ) { zstyle :myzshrc:$g $k $v; }
   _myzshrc_indicator_overwrite                      # Update the overwrite indicator if needed.
 }
 
 # Completely unnecessary, but I like it.
 # This prompt requires Nerd Fonts (https://www.nerdfonts.com/).
 _myzshrc_prompt_fancy() {
-  _myzshrc_prompt='fancy'
-  _myzshrc_prompt_prev='fancy'
-  zstyle ':myzshrc:prompt' prompt-type 'fancy'
-  local userhost_color='%(!.#b24742.#47a730)'
-  zstyle ':myzshrc:prompt' before-userhost '%K{'$userhost_color'}%B%F{255} '
-  zstyle ':myzshrc:prompt' before-path '%b%F{'$userhost_color$'}%K{#547bb5}\uE0B4 %B%F{255}'
-  zstyle ':myzshrc:prompt' after-path '%b%F{#547bb5}%K{'$userhost_color$'}\uE0B4%k%F{'$userhost_color$'}\uE0B4%f '
-  zstyle ':myzshrc:prompt' ssh-indicator $'%K{238}%15F ssh %K{'$userhost_color$'}'
-  zstyle ':myzshrc:prompt' overwrite-indicator $'%4F\uE0B6%K{4}%B%7Fover%k%b%4F\uE0B4%f'
-  zstyle ':myzshrc:prompt' jobs-indicator $'%5F\uE0B6%K{5}%B%7F%j job%(2j.s.)%k%b%5F\uE0B4%f'
-  zstyle ':myzshrc:prompt' error-indicator $'%1F\uE0B6%K{1}%B%7F%?%k%b%1F\uE0B4%f'
-  zstyle ':myzshrc:prompt' continuation $'%B%F{243}\uf054%f%b'
-  zstyle ':myzshrc:prompt' eol-mark '%B%F{243}●%b%f'
-  zstyle ':myzshrc:gitstatus' git-prefix '%B%208Fgit%f%b'
-  zstyle ':myzshrc:gitstatus' stash-count $'%245F*%B%250F'
-  zstyle ':myzshrc:gitstatus' staged-count '%106F+%B%154F'
-  zstyle ':myzshrc:gitstatus' unstaged-count '%167F+%B%210F'
-  zstyle ':myzshrc:gitstatus' untracked-count $'%167F*%B%210F'
-  zstyle ':myzshrc:gitstatus' commits-ahead '%36F↑%B%86F'
-  zstyle ':myzshrc:gitstatus' commits-behind '%36F↓%B%86F'
-  zstyle ':myzshrc:gitstatus' push-commits-ahead '%36F←%B%86F'
-  zstyle ':myzshrc:gitstatus' push-commits-behind '%36F→%B%86F'
-  zstyle ':myzshrc:gitstatus' action '%B%210F'
-  zstyle ':myzshrc:gitstatus' num-conflicted '%167F!%B%210F'
+  _myzshrc_prompt=fancy
+  _myzshrc_prompt_prev=fancy
+  if ((_myzshrc_color24bit)) {
+    local userhost_color='%(!.#b24742.#47a730)'
+    local path_color='#547bb5'
+  } else {
+    local userhost_color='%(!.red.green)'
+    local path_color=blue
+  }
+  for g k v (
+    prompt prompt-type fancy
+    prompt before-userhost "%K{$userhost_color}%B%F{255} "
+    prompt before-path %b%F{$userhost_color}%K{$path_color}$'\uE0B4 %B%F{255}'
+    prompt after-path %b%F{$path_color}%K{$userhost_color}$'\uE0B4'%k%F{$userhost_color}$'\uE0B4%f '
+    prompt ssh-indicator "%K{238}%15F ssh %K{$userhost_color}"
+    prompt overwrite-indicator $'%4F\uE0B6%K{4}%B%7Fover%k%b%4F\uE0B4%f'
+    prompt jobs-indicator $'%5F\uE0B6%K{5}%B%7F%j job%(2j.s.)%k%b%5F\uE0B4%f'
+    prompt error-indicator $'%1F\uE0B6%K{1}%B%7F%?%k%b%1F\uE0B4%f'
+    prompt continuation $'%B%F{243}\uf054%f%b'
+    prompt eol-mark '%B%F{243}●%b%f'
+    gitstatus git-prefix $'%B%208F\uE0A0%f%b'
+    gitstatus stash-count '%245F*%B%250F'
+    gitstatus staged-count '%106F+%B%154F'
+    gitstatus unstaged-count '%167F+%B%210F'
+    gitstatus untracked-count '%167F*%B%210F'
+    gitstatus commits-ahead '%36F↑%B%86F'
+    gitstatus commits-behind '%36F↓%B%86F'
+    gitstatus push-commits-ahead '%36F←%B%86F'
+    gitstatus push-commits-behind '%36F→%B%86F'
+    gitstatus action '%B%210F'
+    gitstatus num-conflicted '%167F!%B%210F'
+  ) { zstyle :myzshrc:$g $k $v; }
   _myzshrc_indicator_overwrite                      # Update the overwrite indicator if needed.
 }
 
 # Minimal prompt. Mainly for screenshots.
 _myzshrc_prompt_minimal() {
-  _myzshrc_prompt='minimal'
-  _myzshrc_prompt_prev='minimal'
-  zstyle -d ':myzshrc:prompt'
-  zstyle -d ':myzshrc:gitstatus'
-  zstyle ':myzshrc:prompt' prompt-type 'minimal'
+  _myzshrc_prompt=minimal
+  _myzshrc_prompt_prev=minimal
+  zstyle -d :myzshrc:prompt
+  zstyle -d :myzshrc:gitstatus
+  zstyle :myzshrc:prompt prompt-type minimal
   _myzshrc_indicator_overwrite                      # Update the overwrite indicator if needed.
 }
 
@@ -660,10 +670,8 @@ _myzshrc_prompt_select() {
     simple) _myzshrc_prompt_simple ;;
     fancy) _myzshrc_prompt_fancy ;;
     minimal) _myzshrc_prompt_minimal ;;
-    *) [[ $TTY = /dev/pts/* ]] \
-        && [[ $LANG = *UTF-8* ]] \
+    *) [[ $LANG = *UTF-8* ]] \
         && ! ((_myzshrc_ssh_session)) \
-        && ((_myzshrc_color8bit)) \
         && [[ -z $TMUX ]] \
         && _myzshrc_prompt_fancy || _myzshrc_prompt_simple
   esac
@@ -692,16 +700,16 @@ _myzshrc_prompt_precmd() {
           ssh_indicator overwrite_indicator jobs_indicator error_indicator \
           continuation eol_mark gitstatus_prompt
 
-    zstyle -s ':myzshrc:prompt' prompt-type prompt_type
-    zstyle -s ':myzshrc:prompt' before-userhost before_userhost
-    zstyle -s ':myzshrc:prompt' before-path before_path
-    zstyle -s ':myzshrc:prompt' after-path after_path
-    zstyle -s ':myzshrc:prompt' ssh-indicator ssh_indicator
-    zstyle -s ':myzshrc:prompt' overwrite-indicator overwrite_indicator
-    zstyle -s ':myzshrc:prompt' jobs-indicator jobs_indicator
-    zstyle -s ':myzshrc:prompt' error-indicator error_indicator
-    zstyle -s ':myzshrc:prompt' continuation continuation
-    zstyle -s ':myzshrc:prompt' eol-mark eol_mark
+    zstyle -s :myzshrc:prompt prompt-type prompt_type
+    zstyle -s :myzshrc:prompt before-userhost before_userhost
+    zstyle -s :myzshrc:prompt before-path before_path
+    zstyle -s :myzshrc:prompt after-path after_path
+    zstyle -s :myzshrc:prompt ssh-indicator ssh_indicator
+    zstyle -s :myzshrc:prompt overwrite-indicator overwrite_indicator
+    zstyle -s :myzshrc:prompt jobs-indicator jobs_indicator
+    zstyle -s :myzshrc:prompt error-indicator error_indicator
+    zstyle -s :myzshrc:prompt continuation continuation
+    zstyle -s :myzshrc:prompt eol-mark eol_mark
 
     _myzshrc_gitstatus_prompt_update
 
@@ -885,17 +893,17 @@ if [[ -n ${commands[git]} && -r ${${commands[gitstatusd]}:h}/../share/gitstatus/
     local git_prefix stash_count staged_count unstaged_count untracked_count commits_behind \
           commits_ahead push_commits_behind push_commits_ahead action num_conflicted
 
-    zstyle -s ':myzshrc:gitstatus' git-prefix git_prefix
-    zstyle -s ':myzshrc:gitstatus' stash-count stash_count
-    zstyle -s ':myzshrc:gitstatus' staged-count staged_count
-    zstyle -s ':myzshrc:gitstatus' unstaged-count unstaged_count
-    zstyle -s ':myzshrc:gitstatus' untracked-count untracked_count
-    zstyle -s ':myzshrc:gitstatus' commits-ahead commits_ahead
-    zstyle -s ':myzshrc:gitstatus' commits-behind commits_behind
-    zstyle -s ':myzshrc:gitstatus' push-commits-ahead push_commits_ahead
-    zstyle -s ':myzshrc:gitstatus' push-commits-behind push_commits_behind
-    zstyle -s ':myzshrc:gitstatus' action action
-    zstyle -s ':myzshrc:gitstatus' num-conflicted num_conflicted
+    zstyle -s :myzshrc:gitstatus git-prefix git_prefix
+    zstyle -s :myzshrc:gitstatus stash-count stash_count
+    zstyle -s :myzshrc:gitstatus staged-count staged_count
+    zstyle -s :myzshrc:gitstatus unstaged-count unstaged_count
+    zstyle -s :myzshrc:gitstatus untracked-count untracked_count
+    zstyle -s :myzshrc:gitstatus commits-ahead commits_ahead
+    zstyle -s :myzshrc:gitstatus commits-behind commits_behind
+    zstyle -s :myzshrc:gitstatus push-commits-ahead push_commits_ahead
+    zstyle -s :myzshrc:gitstatus push-commits-behind push_commits_behind
+    zstyle -s :myzshrc:gitstatus action action
+    zstyle -s :myzshrc:gitstatus num-conflicted num_conflicted
 
     local p="  ${git_prefix} "                      # Git status prefix
     local where                                     # Branch name, tag or commit
@@ -1211,7 +1219,7 @@ _myzshrc_dependency \
 
 # [ UNSET UNNEEDED VARIABLES AND FUNCTIONS ]----------------------------------------------------- #
 unset ZSH_HISTORY_SUBSTR_SEARCH_DIGEST ZSH_SYNTAX_HIGHLIGHTING_VERSION ZSH_COMPLETIONS_VERSION
-unset _myzshrc_keys _myzshrc_color24bit _myzshrc_putty
+unset _myzshrc_keys _myzshrc_putty
 unset -f _myzshrc_bindkeys _myzshrc_dependency
 # ----------------------------------------------------------------------------------------------- #
 
