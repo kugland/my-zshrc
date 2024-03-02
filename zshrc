@@ -167,7 +167,7 @@ _myzshrc_dependency() {
 
 # zsh defer ------------------------------------------------------------------------------------- #
 # renovate: datasource=git-refs depName=https://github.com/romkatv/zsh-defer branch=master
-ZSH_DEFER_DIGEST=1c75faff4d8584afe090b06db11991c8c8d62055
+ZSH_DEFER_DIGEST=53a26e287fbbe2dcebb3aa1801546c6de32416fa
 
 _myzshrc_dependency \
   zsh-defer \
