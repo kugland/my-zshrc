@@ -141,7 +141,7 @@ _myzshrc_dependency() {
   [[ -d ~/.zshrc-deps ]] || mkdir ~/.zshrc-deps || return 1
   if [[ ! -d ~/.zshrc-deps/$pkgid ]] {
     {
-      print -Pnr $'%B%F{243}[%b%fzshrc%B%F{243}]%b%f %F{green}Installing dependency \e[0;4m$name\e[0m ... '
+      print -Pnr $'%B%F{243}[%b%fzshrc%B%F{243}]%b%f %F{green}Installing dependency \e[0;4m'"$name"$'\e[0m ... '
       2>/dev/null curl -sSL -o ~/.zshrc-deps/${pkgid}.tar.gz $tarball_url || {
         error=1
         return
@@ -844,7 +844,7 @@ add-zsh-hook -Uz chpwd _myzshrc_osc7_chpwd
 # Show git status in RPROMPT -------------------------------------------------------------------- #
 # On Arch Linux, install the gitstatus, gitstatus-bin or gitstatus-git packages from AUR.
 # For other distros, cf. https://github.com/romkatv/gitstatus.
-GITSTATUS_PLUGIN=${${commands[gitstatusd]}:h}/../share/gitstatus/gitstatus.plugin.zsh}
+GITSTATUS_PLUGIN=${${commands[gitstatusd]}:h}/../share/gitstatus/gitstatus.plugin.zsh
 
 if [[ -n ${commands[git]} && -r $GITSTATUS_PLUGIN ]] {
   source $GITSTATUS_PLUGIN
