@@ -1035,7 +1035,7 @@ add-zsh-hook zshexit _myzshrc_exit_message_zshexit
 #   --color=auto: use colors when output is a terminal
 #   --indicator-style=slash: use a slash to indicate directories
 #   --time-style=long-iso: show times in long ISO format (e.g. 2017-01-01 12:00)
-alias ls='command ls -h --color=auto --indicator-style=slash --time-style=long-iso'
+alias ls='command ls -h -p --color=auto --group-directories-first --time-style=long-iso'
 () {
   local g
   for g ({{,bz,lz,zstd,xz}{,e,f},pcre{,2}}grep) {   # Add colors to grep and friends.
