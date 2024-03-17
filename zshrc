@@ -844,7 +844,7 @@ add-zsh-hook -Uz chpwd _myzshrc_osc7_chpwd
 # Show git status in RPROMPT -------------------------------------------------------------------- #
 # On Arch Linux, install the gitstatus, gitstatus-bin or gitstatus-git packages from AUR.
 # For other distros, cf. https://github.com/romkatv/gitstatus.
-GITSTATUS_PLUGIN=${${commands[gitstatusd]}:h}/../share/gitstatus/gitstatus.plugin.zsh
+GITSTATUS_PLUGIN=${${commands[gitstatusd]}:A:h}/../share/gitstatus/gitstatus.plugin.zsh
 
 if [[ -n ${commands[git]} && -r $GITSTATUS_PLUGIN ]] {
   source $GITSTATUS_PLUGIN
